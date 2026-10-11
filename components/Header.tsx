@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import BrandLogo from '@/components/BrandLogo';
 
 export default function Header() {
   const pathname = usePathname();
@@ -21,41 +22,13 @@ export default function Header() {
     <header className="bg-surface/90 backdrop-blur-md border-b border-border-ink sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-18 py-3.5 items-center">
-          {/* Logo & Brand Wordmark with Scan Frame & Signal Dot */}
+          {/* Brand Identity: Icon + Readable Wordmark */}
           <Link
             href="/"
-            className="flex items-center space-x-3 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-electric rounded-lg py-1 px-1.5 group transition-colors"
+            className="flex items-center focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-electric rounded-xl py-1 px-1.5 transition-transform hover:opacity-95"
             aria-label="WebForAll Home"
           >
-            {/* Distinctive Logo Mark: Scan-Frame with Vivid Signal Dots */}
-            <div className="w-9 h-9 rounded-lg bg-electric text-white flex items-center justify-center shadow-subtle group-hover:scale-105 transition-transform relative">
-              <svg
-                className="w-5 h-5 text-white"
-                viewBox="0 0 20 20"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.25"
-                aria-hidden="true"
-              >
-                <path
-                  d="M3 7V4a1 1 0 0 1 1-1h3M13 3h3a1 1 0 0 1 1 1v3M17 13v3a1 1 0 0 1-1 1h-3M7 17H4a1 1 0 0 1-1-1v-3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              {/* Signal Dot */}
-              <span className="absolute w-2 h-2 rounded-full bg-golden border border-white" />
-            </div>
-
-            <div className="flex flex-col">
-              <span className="text-xl font-extrabold tracking-tight text-ink flex items-center gap-1.5">
-                WebForAll
-                <span className="w-2 h-2 rounded-full bg-coral inline-block" aria-hidden="true" />
-              </span>
-              <span className="text-xs text-ink-muted font-medium -mt-0.5 hidden sm:block">
-                Accessibility, made actionable
-              </span>
-            </div>
+            <BrandLogo priority iconSize={36} />
           </Link>
 
           {/* Desktop Navigation — Spacious & Centered / Balanced */}

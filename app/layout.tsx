@@ -23,6 +23,27 @@ export const metadata: Metadata = {
     'inclusive design',
   ],
   authors: [{ name: 'WebForAll Project' }],
+  icons: {
+    icon: [
+      { url: '/brand/webforall-icon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/brand/webforall-icon.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/brand/webforall-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  openGraph: {
+    title: 'WebForAll — Web Accessibility Evaluation & Remediation',
+    description: 'A More Accessible Web for Everyone. Automated axe-core evaluation in ephemeral memory.',
+    images: [
+      {
+        url: '/brand/webforall-full-logo.png',
+        width: 1024,
+        height: 512,
+        alt: 'WebForAll — A More Accessible Web for Everyone',
+      },
+    ],
+  },
 };
 
 export default function RootLayout({

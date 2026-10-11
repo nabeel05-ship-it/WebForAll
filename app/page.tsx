@@ -25,7 +25,6 @@ import {
 } from 'lucide-react';
 import ReportView from '@/components/ReportView';
 import { AccessibilityReport } from '@/lib/scanner/types';
-import AccessibilitySignalGraph from '@/components/AccessibilitySignalGraph';
 import { X as ClearIcon } from 'lucide-react';
 
 export default function HomePage() {
@@ -322,16 +321,6 @@ export default function HomePage() {
                   Try the interactive demo storefront &rarr;
                 </Link>
               </div>
-            </motion.div>
-
-            {/* BESPOKE VECTOR GRAPHIC: ACCESSIBILITY SIGNAL MATRIX */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-              className="pt-10"
-            >
-              <AccessibilitySignalGraph />
             </motion.div>
           </section>
 
