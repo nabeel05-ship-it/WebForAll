@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
-import { AccessibilityReport, Finding, ImpactLevel } from '../scanner/types';
+import { AccessibilityReport, Finding, ImpactLevel, IncompleteCheck } from '../scanner/types';
+import { getRemediationForRule } from '../scanner/remediation-catalog';
 
 /**
  * Sanitizes a URL into a safe, alphanumeric filename segment.
@@ -154,19 +155,36 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
 
   y += 12;
 
-  // 4 Metric Summary Boxes
-  const boxWidth = (contentWidth - 18) / 4;
-  const boxHeight = 42;
-
+  // Summary Metric Boxes: dynamically allocate 5 boxes if incomplete checks exist, else 4
+  const hasIncomplete = typeof report.summary.incompleteCount === 'number' && report.summary.incompleteCount > 0;
   const metrics: Array<{ label: string; count: number; bg: [number, number, number]; fg: [number, number, number] }> = [
     { label: 'Total Violations', count: report.summary.totalViolations, bg: [242, 240, 255], fg: [24, 35, 58] },
     { label: 'Critical Barriers', count: report.summary.byImpact.critical, bg: [255, 229, 225], fg: [242, 92, 77] },
     { label: 'Serious Barriers', count: report.summary.byImpact.serious, bg: [255, 241, 201], fg: [180, 83, 9] },
-    { label: 'Passed Checks', count: report.summary.passedCount, bg: [221, 246, 241], fg: [25, 168, 154] },
   ];
 
+  if (hasIncomplete) {
+    metrics.push({
+      label: 'Needs Review',
+      count: report.summary.incompleteCount,
+      bg: [243, 232, 255], // Violet soft #F3E8FF
+      fg: [107, 70, 217], // Violet #6B46D9
+    });
+  }
+
+  metrics.push({
+    label: 'Passed Checks',
+    count: report.summary.passedCount,
+    bg: [221, 246, 241],
+    fg: [25, 168, 154],
+  });
+
+  const gap = 6;
+  const boxWidth = (contentWidth - gap * (metrics.length - 1)) / metrics.length;
+  const boxHeight = 42;
+
   metrics.forEach((m, idx) => {
-    const boxX = margin + idx * (boxWidth + 6);
+    const boxX = margin + idx * (boxWidth + gap);
     doc.setFillColor(m.bg[0], m.bg[1], m.bg[2]);
     doc.roundedRect(boxX, y, boxWidth, boxHeight, 3, 3, 'F');
     doc.setDrawColor(201, 208, 221);
@@ -176,12 +194,12 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(13);
     doc.setTextColor(m.fg[0], m.fg[1], m.fg[2]);
-    doc.text(String(m.count), boxX + 8, y + 18);
+    doc.text(String(m.count), boxX + 6, y + 18);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
+    doc.setFontSize(6.5);
     doc.setTextColor(88, 103, 125);
-    doc.text(m.label.toUpperCase(), boxX + 8, y + 32);
+    doc.text(m.label.toUpperCase(), boxX + 6, y + 32);
   });
 
   y += boxHeight + 12;
@@ -190,10 +208,17 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(88, 103, 125);
-  const summaryExplanation =
-    report.summary.totalViolations === 0
-      ? 'No automated accessibility violations were detected on this page DOM. Manual verification of keyboard task flows and assistive screen readers is still recommended.'
+  const incCount = report.summary.incompleteCount || (report.incomplete ? report.incomplete.length : 0);
+  let summaryExplanation = '';
+  if (report.summary.totalViolations === 0) {
+    summaryExplanation = incCount > 0
+      ? `No automated violations were detected on this page DOM. However, ${incCount} item${incCount === 1 ? '' : 's'} require${incCount === 1 ? 's' : ''} human review and manual verification.`
+      : 'No automated accessibility violations were detected on this page DOM. Manual verification of keyboard task flows and assistive screen readers is still recommended.';
+  } else {
+    summaryExplanation = incCount > 0
+      ? `The automated scanner identified ${report.summary.totalViolations} accessibility barrier${report.summary.totalViolations === 1 ? '' : 's'} across ${report.summary.totalAffectedElements} affected DOM element${report.summary.totalAffectedElements === 1 ? '' : 's'}, and ${incCount} item${incCount === 1 ? '' : 's'} requiring manual human verification. Prioritize Critical and Serious issues first.`
       : `The automated scanner identified ${report.summary.totalViolations} accessibility barrier${report.summary.totalViolations === 1 ? '' : 's'} across ${report.summary.totalAffectedElements} affected DOM element${report.summary.totalAffectedElements === 1 ? '' : 's'}. Prioritize Critical and Serious issues first to resolve the most severe barriers.`;
+  }
 
   const explanationLines = doc.splitTextToSize(summaryExplanation, contentWidth);
   doc.text(explanationLines, margin, y);
@@ -686,7 +711,277 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   }
 
   // ==========================================
-  // 4. TESTING DISCLAIMER & SCOPE
+  // 4. ITEMS REQUIRING HUMAN REVIEW (INCOMPLETE)
+  // ==========================================
+  const incompleteItems = (report.incomplete || []).filter((inc) => {
+    // Avoid duplicating an item if it already exists as an automated violation
+    return !report.violations.some((v) => v.id === inc.id);
+  });
+
+  if (incompleteItems.length > 0) {
+    // Section Header Callout
+    const reviewHeaderNoticeH = 46;
+    ensureSpace(reviewHeaderNoticeH + 30);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(24, 35, 58);
+    doc.text(`Items Requiring Human Review (${incompleteItems.length})`, margin, y);
+    y += 14;
+
+    // Explanatory guidance banner for human review
+    doc.setFillColor(243, 232, 255); // Violet soft #F3E8FF
+    doc.roundedRect(margin, y, contentWidth, reviewHeaderNoticeH, 4, 4, 'F');
+    doc.setDrawColor(216, 180, 254); // Violet border #D8B4FE
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, y, contentWidth, reviewHeaderNoticeH, 4, 4, 'S');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.setTextColor(107, 70, 217); // Violet #6B46D9
+    doc.text('Why do these checks require manual verification?', margin + 10, y + 14);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(88, 103, 125);
+    const noticeDesc =
+      'Automated algorithms cannot definitively verify visual contrast without rendering context, nor can they determine if a button label is contextually meaningful or an image is truly decorative. Human review ensures full conformance.';
+    const noticeLines = doc.splitTextToSize(noticeDesc, contentWidth - 20);
+    doc.text(noticeLines, margin + 10, y + 26);
+    y += reviewHeaderNoticeH + 12;
+
+    // Render each IncompleteCheck card
+    incompleteItems.forEach((item: IncompleteCheck, idx: number) => {
+      const remediation = getRemediationForRule(item.id, item.description, item.helpUrl);
+
+      // Pre-calculate wrapped lines
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10.5);
+      const titleLines = doc.splitTextToSize(`${idx + 1}. ${item.help || remediation.friendlyTitle || item.id}`, cardInnerWidth);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      const descText = item.description || remediation.whatIsWrong;
+      const descLines = doc.splitTextToSize(descText, cardInnerWidth);
+
+      const reviewRequirement = item.reason || 'Requires manual verification or visual context not fully computable automatically.';
+      const reqLines = doc.splitTextToSize(reviewRequirement, cardInnerWidth);
+
+      const howToVerifyText = remediation.howToFix;
+      const howToVerifyLines = doc.splitTextToSize(howToVerifyText, cardInnerWidth);
+
+      // Technical Standards & Rule ID
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      const rawStandards = remediation.wcagCriteria?.join(', ');
+      const standardsText = `Rule ID: ${item.id}   |   Standards: ${rawStandards || 'WCAG 2.1 AA'}`;
+      const standardsLines = doc.splitTextToSize(standardsText, cardInnerWidth);
+
+      // Compute required card height
+      const cardPaddingTop = 16;
+      const cardPaddingBottom = 12;
+      const cardH =
+        cardPaddingTop +
+        15 + // Badges row
+        titleLines.length * 13 + 5 + // Title
+        10 + descLines.length * 10.5 + 5 + // Description
+        10 + reqLines.length * 10.5 + 5 + // Review Requirement
+        10 + howToVerifyLines.length * 10.5 + 5 + // Recommended Manual Verification Steps
+        standardsLines.length * 9.5 + 5 + // Standards line
+        cardPaddingBottom;
+
+      const cardX = margin + cardPaddingX;
+      const freshPageAvailable = maxPageY - headerRunningY;
+
+      // Ensure space on page
+      if (cardH <= freshPageAvailable) {
+        if (y + cardH > maxPageY) {
+          doc.addPage();
+          drawRunningHeader();
+          y = headerRunningY;
+        }
+
+        const cardStartY = y;
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(216, 180, 254); // Subtle violet border
+        doc.setLineWidth(0.75);
+        doc.roundedRect(margin, cardStartY, contentWidth, cardH, 4, 4, 'FD');
+
+        let innerY = cardStartY + cardPaddingTop;
+
+        // Top Badges: "NEEDS HUMAN REVIEW" + Rule ID + Evaluated count
+        const pillW = drawPill('NEEDS HUMAN REVIEW', cardX, innerY, [243, 232, 255], [107, 70, 217]);
+        drawPill(item.id, cardX + pillW + 6, innerY, [242, 240, 255], [24, 35, 58]);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(88, 103, 125);
+        const countLabel = `${item.nodesCount} element${item.nodesCount === 1 ? '' : 's'} evaluated`;
+        doc.text(countLabel, margin + contentWidth - cardPaddingX, innerY - 0.5, { align: 'right' });
+        innerY += 15;
+
+        // Title
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10.5);
+        doc.setTextColor(24, 35, 58);
+        doc.text(titleLines, cardX, innerY);
+        innerY += titleLines.length * 13 + 5;
+
+        // Context / Description
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(107, 70, 217); // Violet
+        doc.text('Review Context & Description:', cardX, innerY);
+        innerY += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(24, 35, 58);
+        doc.text(descLines, cardX, innerY);
+        innerY += descLines.length * 10.5 + 5;
+
+        // Review Requirement
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(180, 83, 9); // Amber
+        doc.text('Why Human Review is Required:', cardX, innerY);
+        innerY += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(88, 103, 125);
+        doc.text(reqLines, cardX, innerY);
+        innerY += reqLines.length * 10.5 + 5;
+
+        // Recommended Manual Verification Steps
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(25, 168, 154); // Teal
+        doc.text('Recommended Manual Verification Steps:', cardX, innerY);
+        innerY += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(24, 35, 58);
+        doc.text(howToVerifyLines, cardX, innerY);
+        innerY += howToVerifyLines.length * 10.5 + 5;
+
+        // Standards & Rule ID
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(88, 103, 125);
+        doc.text(standardsLines, cardX, innerY);
+
+        y = cardStartY + cardH + 12;
+      } else {
+        // Safe continuation split across pages for extraordinarily tall review items
+        if (y + 120 > maxPageY) {
+          doc.addPage();
+          drawRunningHeader();
+          y = headerRunningY;
+        }
+
+        const part1H =
+          cardPaddingTop +
+          15 +
+          titleLines.length * 13 + 5 +
+          10 + descLines.length * 10.5 + 5 +
+          10 + reqLines.length * 10.5 + 5 +
+          cardPaddingBottom;
+
+        const part1StartY = y;
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(216, 180, 254);
+        doc.setLineWidth(0.75);
+        doc.roundedRect(margin, part1StartY, contentWidth, part1H, 4, 4, 'FD');
+
+        let innerY = part1StartY + cardPaddingTop;
+
+        const pillW = drawPill('NEEDS HUMAN REVIEW', cardX, innerY, [243, 232, 255], [107, 70, 217]);
+        drawPill(item.id, cardX + pillW + 6, innerY, [242, 240, 255], [24, 35, 58]);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(88, 103, 125);
+        const countLabel = `${item.nodesCount} element${item.nodesCount === 1 ? '' : 's'} evaluated`;
+        doc.text(countLabel, margin + contentWidth - cardPaddingX, innerY - 0.5, { align: 'right' });
+        innerY += 15;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10.5);
+        doc.setTextColor(24, 35, 58);
+        doc.text(titleLines, cardX, innerY);
+        innerY += titleLines.length * 13 + 5;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(107, 70, 217);
+        doc.text('Review Context & Description:', cardX, innerY);
+        innerY += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(24, 35, 58);
+        doc.text(descLines, cardX, innerY);
+        innerY += descLines.length * 10.5 + 5;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(180, 83, 9);
+        doc.text('Why Human Review is Required:', cardX, innerY);
+        innerY += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(88, 103, 125);
+        doc.text(reqLines, cardX, innerY);
+
+        y = part1StartY + part1H + 12;
+
+        // Continuation part 2
+        const part2H =
+          cardPaddingTop +
+          18 + // continuation title
+          10 + howToVerifyLines.length * 10.5 + 5 +
+          standardsLines.length * 9.5 + 5 +
+          cardPaddingBottom;
+
+        if (y + part2H > maxPageY) {
+          doc.addPage();
+          drawRunningHeader();
+          y = headerRunningY;
+        }
+
+        const part2StartY = y;
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(216, 180, 254);
+        doc.setLineWidth(0.75);
+        doc.roundedRect(margin, part2StartY, contentWidth, part2H, 4, 4, 'FD');
+
+        let innerY2 = part2StartY + cardPaddingTop;
+
+        const pillW2 = drawPill('NEEDS HUMAN REVIEW', cardX, innerY2, [243, 232, 255], [107, 70, 217]);
+        const pillW2Id = drawPill(item.id, cardX + pillW2 + 6, innerY2, [242, 240, 255], [24, 35, 58]);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(88, 103, 125);
+        const contTitle = `${(item.help || item.id).slice(0, 36)}... (Continued)`;
+        doc.text(contTitle, cardX + pillW2 + 6 + pillW2Id + 8, innerY2);
+        innerY2 += 18;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(25, 168, 154);
+        doc.text('Recommended Manual Verification Steps:', cardX, innerY2);
+        innerY2 += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(24, 35, 58);
+        doc.text(howToVerifyLines, cardX, innerY2);
+        innerY2 += howToVerifyLines.length * 10.5 + 5;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(88, 103, 125);
+        doc.text(standardsLines, cardX, innerY2);
+
+        y = part2StartY + part2H + 12;
+      }
+    });
+  }
+
+  // ==========================================
+  // 5. TESTING DISCLAIMER & SCOPE
   // ==========================================
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);

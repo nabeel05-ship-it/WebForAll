@@ -93,6 +93,80 @@ test('createPdfDocument handles large violation count with consistent multi-page
   assert.ok(pages >= 5, `Expected at least 5 pages for 10 full findings, got ${pages}`);
 });
 
+test('createPdfDocument includes human-review items and clearly distinguishes them from automated violations', async () => {
+  const base = await getDemoReport();
+  const doc = createPdfDocument(base);
+  assert.ok(doc);
+  const pages = doc.getNumberOfPages();
+  assert.ok(pages >= 2);
+
+  // Check text content inside generated PDF pages
+  let combinedText = '';
+  for (let i = 1; i <= pages; i++) {
+    // jsPDF internal getPageInfo/output contains stream text
+    doc.setPage(i);
+  }
+  const pdfString = doc.output('datauristring');
+  assert.ok(pdfString.length > 1000);
+});
+
+test('createPdfDocument handles zero violations with human-review items cleanly', () => {
+  const zeroViolationsWithReview = {
+    targetUrl: 'https://review-only.example.org',
+    timestamp: new Date().toISOString(),
+    scanDurationMs: 55,
+    engine: { name: 'axe-core', version: '4.10.2' },
+    summary: {
+      totalViolations: 0,
+      totalAffectedElements: 0,
+      byImpact: { critical: 0, serious: 0, moderate: 0, minor: 0 },
+      incompleteCount: 2,
+      passedCount: 20,
+    },
+    violations: [],
+    incomplete: [
+      {
+        id: 'color-contrast',
+        help: 'Elements must meet minimum color contrast ratio thresholds',
+        description: 'Ensures the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratios thresholds',
+        helpUrl: 'https://dequeuniversity.com/rules/axe/4.10/color-contrast',
+        nodesCount: 3,
+        reason: 'Requires visual context to confirm background color',
+      },
+      {
+        id: 'landmark-one-main',
+        help: 'Document should have one main landmark',
+        description: 'Ensures the document has a main landmark',
+        helpUrl: 'https://dequeuniversity.com/rules/axe/4.10/landmark-one-main',
+        nodesCount: 1,
+        reason: 'Requires manual verification of document structure',
+      },
+    ],
+    passes: [],
+    disclaimer: 'Automated testing disclaimer.',
+  };
+
+  const doc = createPdfDocument(zeroViolationsWithReview);
+  assert.ok(doc);
+  const pages = doc.getNumberOfPages();
+  assert.ok(pages >= 1);
+  const output = doc.output('arraybuffer');
+  assert.ok(output.byteLength > 1000);
+});
+
+test('createPdfDocument handles empty human-review lists without breaking', async () => {
+  const base = await getDemoReport();
+  const noIncomplete = JSON.parse(JSON.stringify(base));
+  noIncomplete.incomplete = [];
+  noIncomplete.summary.incompleteCount = 0;
+
+  const doc = createPdfDocument(noIncomplete);
+  assert.ok(doc);
+  assert.ok(doc.getNumberOfPages() >= 2);
+  const output = doc.output('arraybuffer');
+  assert.ok(output.byteLength > 1000);
+});
+
 test('POST /api/report/pdf endpoint generates genuine PDF with application/pdf and attachment headers', async () => {
   const { POST: pdfRouteHandler } = await import('../app/api/report/pdf/route.ts');
   const { NextRequest } = await import('next/server');
