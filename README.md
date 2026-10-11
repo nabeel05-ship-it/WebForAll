@@ -152,8 +152,8 @@ Rather than embedding fragile, memory-heavy headless browser binaries (e.g. 300M
 
 ### Installation
 ```bash
-git clone https://github.com/nabeel05-ship-it/new_WebForAll.git
-cd new_WebForAll
+git clone https://github.com/nabeel05-ship-it/webforall.git
+cd webforall
 npm install
 ```
 
