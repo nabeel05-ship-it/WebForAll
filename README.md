@@ -6,10 +6,10 @@
 
 **Making the web more accessible, one scan at a time.**
 
-[![Next.js](https://img.shields.io/badge/Next.js-16.4-black?style=flat&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
-[![axe-core](https://img.shields.io/badge/axe--core-4.14-005A9C?style=flat)](https://github.com/dequelabs/axe-core)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.4.0-black?logo=nextdotjs)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-7.0.2-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![axe-core](https://img.shields.io/badge/axe--core-4.14.0-blue)](https://github.com/dequelabs/axe-core)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.19-38b2ac?logo=tailwindcss)](https://tailwindcss.com/)
 
 [Live Demo](https://webforall-seven.vercel.app/) &bull; [GitHub Repository](https://github.com/nabeel05-ship-it/webforall) &bull; [Issue Tracker](https://github.com/nabeel05-ship-it/webforall/issues)
 
@@ -205,7 +205,7 @@ WebForAll executes `axe-core` directly inside a lightweight Node.js `jsdom` virt
 |:---|:---|:---|
 | **[Next.js](https://nextjs.org/)** | `16.4.0` | React framework providing App Router, serverless route handlers, and static optimization |
 | **[React](https://react.dev/)** | `19.3.0` | UI component library with Server and Client Components |
-| **[TypeScript](https://www.typescriptlang.org/)** | `5.x` (`^7.0.2` dev) | Static type safety and strict interface definitions across scanner and security libraries |
+| **[TypeScript](https://www.typescriptlang.org/)** | `7.0.2` | Static type safety and strict interface definitions across scanner and security libraries |
 | **[axe-core](https://github.com/dequelabs/axe-core)** | `^4.14.0` | Industry-standard accessibility testing engine for WCAG rule evaluation |
 | **[jsdom](https://github.com/jsdom/jsdom)** | `^30.1.2` | Pure-JavaScript DOM implementation for running axe-core in Node.js server environments |
 | **[jsPDF](https://github.com/parallax/jsPDF)** | `^4.2.1` | Client-side vector generation of downloadable multi-page accessibility reports |
