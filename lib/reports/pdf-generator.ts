@@ -441,5 +441,17 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
 export function generatePdfReport(report: AccessibilityReport): void {
   const doc = createPdfDocument(report);
   const filename = `webforall-accessibility-report-${sanitizeHostnameForFilename(report.targetUrl)}.pdf`;
-  doc.save(filename);
+  
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+    const arrayBuffer = doc.output('arraybuffer');
+    const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
 }

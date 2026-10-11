@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { AccessibilityReport, ImpactLevel } from '@/lib/scanner/types';
-import { generatePdfReport } from '@/lib/reports/pdf-generator';
+import { generatePdfReport, sanitizeHostnameForFilename } from '@/lib/reports/pdf-generator';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   AlertTriangle,
@@ -105,12 +105,65 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
     try {
       setIsGeneratingPdf(true);
       setPdfError(null);
-      // Let UI update to show loading spinner
-      await new Promise((resolve) => setTimeout(resolve, 80));
-      generatePdfReport(report);
+
+      // Attempt server-side PDF generation with genuine Content-Type & Content-Disposition headers
+      const res = await fetch('/api/report/pdf', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ report }),
+      });
+
+      if (!res.ok) {
+        let errorMsg = `Server error (HTTP ${res.status})`;
+        try {
+          const errData = await res.json();
+          if (errData?.error) errorMsg = errData.error;
+        } catch {
+          // Ignore JSON parsing failure
+        }
+        throw new Error(errorMsg);
+      }
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/pdf')) {
+        throw new Error('Received non-PDF response format from server.');
+      }
+
+      // Extract filename from Content-Disposition header if available
+      let filename = `webforall-accessibility-report-${sanitizeHostnameForFilename(report.targetUrl)}.pdf`;
+      const disposition = res.headers.get('content-disposition');
+      if (disposition) {
+        const match = disposition.match(/filename=["']?([^"';]+)["']?/i);
+        if (match && match[1]) {
+          filename = match[1].trim();
+        }
+      }
+
+      const blob = await res.blob();
+      if (!blob || blob.size === 0) {
+        throw new Error('Received empty PDF document.');
+      }
+
+      // Trigger browser download with explicit filename and delayed revoke
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
     } catch (err: unknown) {
-      console.error('PDF generation failed:', err);
-      setPdfError('Failed to generate PDF document. You can still use Print Report or Download JSON.');
+      console.warn('Server PDF download failed, falling back to local generation:', err);
+      try {
+        generatePdfReport(report);
+      } catch (clientErr: unknown) {
+        const error = clientErr as Error;
+        console.error('Local PDF generation failed:', error);
+        setPdfError(`Failed to generate PDF document: ${error.message || 'Unknown error'}. You can still use Print Report or Export JSON.`);
+      }
     } finally {
       setIsGeneratingPdf(false);
     }

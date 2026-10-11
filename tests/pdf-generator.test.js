@@ -52,3 +52,42 @@ test('createPdfDocument handles zero violations report cleanly', () => {
   const output = doc.output('arraybuffer');
   assert.ok(output.byteLength > 500);
 });
+
+test('POST /api/report/pdf endpoint generates genuine PDF with application/pdf and attachment headers', async () => {
+  const { POST: pdfRouteHandler } = await import('../app/api/report/pdf/route.ts');
+  const { NextRequest } = await import('next/server');
+  const report = await getDemoReport();
+
+  const req = new NextRequest('http://localhost:3000/api/report/pdf', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ report }),
+  });
+
+  const res = await pdfRouteHandler(req);
+  assert.equal(res.status, 200, 'Expected HTTP 200 OK');
+  assert.equal(res.headers.get('content-type'), 'application/pdf');
+  assert.ok(res.headers.get('content-disposition')?.includes('attachment; filename="webforall-accessibility-report-demo.webforall.local.pdf"'));
+
+  const arrayBuffer = await res.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+  assert.ok(buffer.length > 1000, 'Expected PDF byte length > 1000');
+  assert.equal(buffer.subarray(0, 5).toString('ascii'), '%PDF-');
+});
+
+test('POST /api/report/pdf returns 400 on malformed or missing report body', async () => {
+  const { POST: pdfRouteHandler } = await import('../app/api/report/pdf/route.ts');
+  const { NextRequest } = await import('next/server');
+
+  const req = new NextRequest('http://localhost:3000/api/report/pdf', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ invalid: true }),
+  });
+
+  const res = await pdfRouteHandler(req);
+  assert.equal(res.status, 400);
+  const data = await res.json();
+  assert.equal(data.success, false);
+  assert.equal(data.code, 'INVALID_REPORT');
+});
