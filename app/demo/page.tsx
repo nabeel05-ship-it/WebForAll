@@ -144,10 +144,16 @@ export default function DemoPage() {
 
     try {
       const res = await fetch('/api/demo');
-      const data = await res.json();
+      let data: any = null;
+      try {
+        const text = await res.text();
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = null;
+      }
 
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Failed to execute demo evaluation');
+      if (!res.ok || !data || !data.success) {
+        throw new Error(data?.error || `Demo evaluation failed (HTTP ${res.status}). Please try again.`);
       }
 
       setReport(data.report);

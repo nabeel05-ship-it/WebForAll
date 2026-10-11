@@ -68,12 +68,32 @@ export default function HomePage() {
         body: JSON.stringify({ url: target }),
       });
 
-      const data = await res.json();
+      let data: any = null;
+      let rawText = '';
+      try {
+        rawText = await res.text();
+        data = rawText ? JSON.parse(rawText) : null;
+      } catch {
+        data = null;
+      }
 
-      if (!res.ok || !data.success) {
+      if (!res.ok || !data || !data.success) {
+        let errorMessage = data?.error;
+        if (!errorMessage) {
+          if (res.status === 500) {
+            errorMessage = 'The scanner service is temporarily unavailable. Please try again shortly.';
+          } else if (res.status === 504 || res.status === 408) {
+            errorMessage = 'The scan request timed out. The destination website may be slow or unresponsive.';
+          } else if (res.status >= 400 && res.status < 500) {
+            errorMessage = `Unable to complete scan (HTTP ${res.status}). Please check the URL and try again.`;
+          } else {
+            errorMessage = 'The scanner returned an unreadable response. Please verify the URL and try again.';
+          }
+        }
+
         setScanError({
-          message: data.error || 'The scanner encountered an unexpected error while evaluating this website.',
-          code: data.code,
+          message: errorMessage,
+          code: data?.code || `HTTP_${res.status || 'ERROR'}`,
         });
         setIsScanning(false);
         setScanStepText('');
@@ -87,7 +107,7 @@ export default function HomePage() {
     } catch (err: unknown) {
       const error = err as Error;
       setScanError({
-        message: `Connection failed: ${error.message || 'Unable to connect to the scanner service.'}`,
+        message: `Network error: ${error.message || 'Unable to communicate with the scanner service.'}`,
         code: 'NETWORK_ERROR',
       });
       setIsScanning(false);
