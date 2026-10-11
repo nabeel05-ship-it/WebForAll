@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { DEMO_HTML } from '@/lib/fixtures/demo-page';
+import { DEMO_HTML } from '@/lib/fixtures/demo-fixture';
 
 export const runtime = 'nodejs';
 
