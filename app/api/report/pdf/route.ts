@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
+        'Access-Control-Expose-Headers': 'Content-Disposition',
         'Content-Length': pdfBuffer.length.toString(),
         'Cache-Control': 'no-store, no-cache, must-revalidate',
       },

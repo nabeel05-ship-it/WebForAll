@@ -436,6 +436,32 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
 }
 
 /**
+ * Triggers a cross-browser file download from a Blob with safe asynchronous DOM cleanup.
+ * Prevents Chromium/Chrome from cancelling downloads when elements are removed prematurely.
+ */
+export function triggerBrowserDownload(blob: Blob, filename: string): void {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = url;
+  a.download = filename;
+
+  document.body.appendChild(a);
+  a.click();
+
+  // Asynchronous cleanup: Chrome requires the element to remain connected
+  // and the object URL to remain valid until the browser's download manager takes over.
+  setTimeout(() => {
+    if (a.parentNode) {
+      document.body.removeChild(a);
+    }
+    URL.revokeObjectURL(url);
+  }, 1000);
+}
+
+/**
  * Generates and triggers browser download of the PDF report.
  */
 export function generatePdfReport(report: AccessibilityReport): void {
@@ -445,13 +471,6 @@ export function generatePdfReport(report: AccessibilityReport): void {
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     const arrayBuffer = doc.output('arraybuffer');
     const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    triggerBrowserDownload(blob, filename);
   }
 }

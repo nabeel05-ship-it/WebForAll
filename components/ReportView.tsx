@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { AccessibilityReport, ImpactLevel } from '@/lib/scanner/types';
-import { generatePdfReport, sanitizeHostnameForFilename } from '@/lib/reports/pdf-generator';
+import { generatePdfReport, sanitizeHostnameForFilename, triggerBrowserDownload } from '@/lib/reports/pdf-generator';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   AlertTriangle,
@@ -91,14 +91,7 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
     const filename = `webforall-report-${hostname}.json`;
     const jsonStr = JSON.stringify(report, null, 2);
     const blob = new Blob([jsonStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    triggerBrowserDownload(blob, filename);
   };
 
   const handleDownloadPdf = async () => {
@@ -141,20 +134,14 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
         }
       }
 
-      const blob = await res.blob();
-      if (!blob || blob.size === 0) {
+      const arrayBuffer = await res.arrayBuffer();
+      if (!arrayBuffer || arrayBuffer.byteLength === 0) {
         throw new Error('Received empty PDF document.');
       }
 
-      // Trigger browser download with explicit filename and delayed revoke
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      // Explicitly construct application/pdf Blob and trigger cross-browser download
+      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
+      triggerBrowserDownload(blob, filename);
     } catch (err: unknown) {
       console.warn('Server PDF download failed, falling back to local generation:', err);
       try {
