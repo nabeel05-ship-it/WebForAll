@@ -28,15 +28,41 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 40;
-  const contentWidth = pageWidth - margin * 2;
-  const bottomMargin = 50;
+  const contentWidth = pageWidth - margin * 2; // 532 pt
+  const cardPaddingX = 12;
+  const cardInnerWidth = contentWidth - cardPaddingX * 2; // 508 pt
+  const bottomMargin = 48; // Leaves room for footer at pageHeight - 20
+  const maxPageY = pageHeight - bottomMargin; // 744 pt
+  const headerRunningY = 46; // Content start Y on pages 2+
 
   let y = margin;
 
-  const checkPageBreak = (neededHeight: number): void => {
-    if (y + neededHeight > pageHeight - bottomMargin) {
+  // Draws running header on pages 2+
+  const drawRunningHeader = (): void => {
+    doc.setFillColor(24, 35, 58); // Dark Navy #18233A
+    doc.rect(0, 0, pageWidth, 4, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(88, 103, 125); // Ink Muted
+    doc.text('WEBFORALL  •  ACCESSIBILITY EVALUATION REPORT', margin, 24);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(140, 150, 165);
+    const shortUrl = report.targetUrl.replace(/^https?:\/\//, '').slice(0, 48);
+    doc.text(shortUrl, pageWidth - margin, 24, { align: 'right' });
+
+    doc.setDrawColor(220, 226, 235);
+    doc.setLineWidth(0.5);
+    doc.line(margin, 30, pageWidth - margin, 30);
+  };
+
+  const ensureSpace = (neededHeight: number): void => {
+    if (y + neededHeight > maxPageY) {
       doc.addPage();
-      y = margin + 15;
+      drawRunningHeader();
+      y = headerRunningY;
     }
   };
 
@@ -49,14 +75,14 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
     textColor: [number, number, number]
   ): number => {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8);
     const textWidth = doc.getTextWidth(text);
-    const paddingX = 8;
-    const pillHeight = 16;
+    const paddingX = 7;
+    const pillHeight = 15;
     const pillWidth = textWidth + paddingX * 2;
 
     doc.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
-    doc.roundedRect(xPos, yPos - 11, pillWidth, pillHeight, 3, 3, 'F');
+    doc.roundedRect(xPos, yPos - 10.5, pillWidth, pillHeight, 3, 3, 'F');
 
     doc.setTextColor(textColor[0], textColor[1], textColor[2]);
     doc.text(text, xPos + paddingX, yPos);
@@ -65,10 +91,10 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   };
 
   // ==========================================
-  // 1. BRAND HEADER & REPORT TITLE
+  // 1. BRAND HEADER & REPORT TITLE (PAGE 1)
   // ==========================================
   doc.setFillColor(24, 35, 58); // Dark Navy #18233A
-  doc.rect(0, 0, pageWidth, 6, 'F');
+  doc.rect(0, 0, pageWidth, 5, 'F');
 
   // Eyebrow Brand Mark
   doc.setFont('helvetica', 'bold');
@@ -81,7 +107,7 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   // Report Main Title
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(18);
-  doc.setTextColor(24, 35, 58); // #18233A
+  doc.setTextColor(24, 35, 58);
   doc.text(
     report.isDemo ? 'Interactive Storefront Demo Report' : 'Web Accessibility Evaluation Report',
     margin,
@@ -90,47 +116,47 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
 
   y += 18;
 
-  // Target URL (truncated or wrapped cleanly)
+  // Target URL (truncated safely if oversized)
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
+  doc.setFontSize(10.5);
   doc.setTextColor(49, 87, 232);
-  const truncatedUrl = report.targetUrl.length > 80 ? report.targetUrl.slice(0, 77) + '...' : report.targetUrl;
-  doc.text(truncatedUrl, margin, y);
+  const targetUrlDisplay =
+    report.targetUrl.length > 76 ? report.targetUrl.slice(0, 73) + '...' : report.targetUrl;
+  doc.text(targetUrlDisplay, margin, y);
 
-  y += 16;
+  y += 15;
 
   // Metadata Line: Timestamp & Engine
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(88, 103, 125); // Ink Muted
+  doc.setFontSize(8.5);
+  doc.setTextColor(88, 103, 125);
   const formattedDate = new Date(report.timestamp).toLocaleString();
-  doc.text(
-    `Audited: ${formattedDate}   |   Duration: ${report.scanDurationMs}ms   |   Engine: ${report.engine.name} v${report.engine.version}   |   Standard: WCAG 2.1 Level AA`,
-    margin,
-    y
-  );
+  const metaText = `Audited: ${formattedDate}   |   Duration: ${report.scanDurationMs}ms   |   Engine: ${report.engine.name} v${report.engine.version}   |   Standard: WCAG 2.1 Level AA`;
+  const metaLines = doc.splitTextToSize(metaText, contentWidth);
+  doc.text(metaLines, margin, y);
 
-  y += 18;
+  y += metaLines.length * 11 + 6;
+
   doc.setDrawColor(201, 208, 221); // Border #C9D0DD
   doc.setLineWidth(0.75);
   doc.line(margin, y, pageWidth - margin, y);
-  y += 18;
+  y += 14;
 
   // ==========================================
   // 2. EXECUTIVE SUMMARY & SEVERITY METRICS
   // ==========================================
-  checkPageBreak(85);
+  ensureSpace(80);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(24, 35, 58);
   doc.text('Summary of Findings', margin, y);
 
-  y += 14;
+  y += 12;
 
   // 4 Metric Summary Boxes
   const boxWidth = (contentWidth - 18) / 4;
-  const boxHeight = 44;
+  const boxHeight = 42;
 
   const metrics: Array<{ label: string; count: number; bg: [number, number, number]; fg: [number, number, number] }> = [
     { label: 'Total Violations', count: report.summary.totalViolations, bg: [242, 240, 255], fg: [24, 35, 58] },
@@ -142,59 +168,43 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   metrics.forEach((m, idx) => {
     const boxX = margin + idx * (boxWidth + 6);
     doc.setFillColor(m.bg[0], m.bg[1], m.bg[2]);
-    doc.roundedRect(boxX, y, boxWidth, boxHeight, 4, 4, 'F');
+    doc.roundedRect(boxX, y, boxWidth, boxHeight, 3, 3, 'F');
     doc.setDrawColor(201, 208, 221);
     doc.setLineWidth(0.5);
-    doc.roundedRect(boxX, y, boxWidth, boxHeight, 4, 4, 'S');
+    doc.roundedRect(boxX, y, boxWidth, boxHeight, 3, 3, 'S');
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(14);
+    doc.setFontSize(13);
     doc.setTextColor(m.fg[0], m.fg[1], m.fg[2]);
-    doc.text(String(m.count), boxX + 10, y + 20);
+    doc.text(String(m.count), boxX + 8, y + 18);
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
+    doc.setFontSize(7);
     doc.setTextColor(88, 103, 125);
-    doc.text(m.label.toUpperCase(), boxX + 10, y + 34);
+    doc.text(m.label.toUpperCase(), boxX + 8, y + 32);
   });
 
-  y += boxHeight + 14;
+  y += boxHeight + 12;
 
   // Explanation note
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(8.5);
   doc.setTextColor(88, 103, 125);
   const summaryExplanation =
     report.summary.totalViolations === 0
       ? 'No automated accessibility violations were detected on this page DOM. Manual verification of keyboard task flows and assistive screen readers is still recommended.'
-      : `The automated scanner identified ${report.summary.totalViolations} accessibility barrier${report.summary.totalViolations === 1 ? '' : 's'} across ${report.summary.totalAffectedElements} affected DOM element${report.summary.totalAffectedElements === 1 ? '' : 's'}. Review the findings below, prioritizing Critical and Serious issues.`;
+      : `The automated scanner identified ${report.summary.totalViolations} accessibility barrier${report.summary.totalViolations === 1 ? '' : 's'} across ${report.summary.totalAffectedElements} affected DOM element${report.summary.totalAffectedElements === 1 ? '' : 's'}. Prioritize Critical and Serious issues first to resolve the most severe barriers.`;
 
   const explanationLines = doc.splitTextToSize(summaryExplanation, contentWidth);
   doc.text(explanationLines, margin, y);
-  y += explanationLines.length * 12 + 16;
+  y += explanationLines.length * 11 + 14;
 
   // ==========================================
   // 3. DETAILED FINDINGS
   // ==========================================
   if (report.violations.length > 0) {
-    checkPageBreak(40);
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(12);
-    doc.setTextColor(24, 35, 58);
-    doc.text(`Identified Violations (${report.violations.length})`, margin, y);
-    y += 14;
-
     report.violations.forEach((violation: Finding, idx: number) => {
-      // Estimated block height before page break
-      checkPageBreak(130);
-
-      // Card Container Background
-      const itemStartY = y;
-      doc.setFillColor(255, 255, 255);
-      doc.setDrawColor(201, 208, 221);
-      doc.setLineWidth(0.75);
-
-      // Impact Chip
+      // Impact Chip Colors
       let impactBg: [number, number, number] = [242, 240, 255];
       let impactFg: [number, number, number] = [24, 35, 58];
       if (violation.impact === 'critical') {
@@ -211,176 +221,458 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
         impactFg = [49, 87, 232];
       }
 
-      y += 14;
-      const pillW = drawPill(violation.impact.toUpperCase(), margin + 10, y, impactBg, impactFg);
+      // Pre-calculate line wrapping and exact heights for all sections
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10.5);
+      const titleLines = doc.splitTextToSize(`${idx + 1}. ${violation.title}`, cardInnerWidth);
 
-      // Rule ID Pill
-      drawPill(violation.id, margin + 15 + pillW, y, [242, 240, 255], [24, 35, 58]);
-
-      // Element Count
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8.5);
-      doc.setTextColor(88, 103, 125);
-      doc.text(
-        `${violation.nodes.length} element${violation.nodes.length === 1 ? '' : 's'} affected`,
-        margin + contentWidth - 90,
-        y
-      );
+      const problemText = violation.remediation.whatIsWrong || violation.description;
+      const problemLines = doc.splitTextToSize(problemText, cardInnerWidth);
 
-      y += 16;
+      const whyLines = doc.splitTextToSize(violation.remediation.whyItMatters, cardInnerWidth);
 
-      // Issue Title
+      const whoLines = violation.remediation.whoIsAffected
+        ? doc.splitTextToSize(violation.remediation.whoIsAffected, cardInnerWidth)
+        : null;
+
+      const fixLines = doc.splitTextToSize(violation.remediation.howToFix, cardInnerWidth);
+
+      // Standards text line
       doc.setFont('helvetica', 'bold');
-      doc.setFontSize(11);
-      doc.setTextColor(24, 35, 58);
-      const titleLines = doc.splitTextToSize(`${idx + 1}. ${violation.title}`, contentWidth - 20);
-      doc.text(titleLines, margin + 10, y);
-      y += titleLines.length * 13 + 6;
+      doc.setFontSize(8);
+      const rawStandards =
+        violation.remediation.wcagCriteria?.join(', ') || violation.tags?.slice(0, 4).join(', ');
+      const standardsText = `Rule ID: ${violation.id}   |   Standards: ${rawStandards || 'WCAG 2.1 AA'}`;
+      const standardsLines = doc.splitTextToSize(standardsText, cardInnerWidth);
 
-      // 1. What is the problem?
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.setTextColor(49, 87, 232); // Electric
-      doc.text('What is the problem?', margin + 10, y);
-      y += 11;
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(24, 35, 58);
-      const problemLines = doc.splitTextToSize(violation.remediation.whatIsWrong || violation.description, contentWidth - 20);
-      doc.text(problemLines, margin + 10, y);
-      y += problemLines.length * 11 + 6;
+      // Selectors lines
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(7.5);
+      const selectorLinesList: string[][] = [];
+      const nodesToShow = violation.nodes.slice(0, 2);
+      nodesToShow.forEach((node) => {
+        const selText = node.target.join(' ');
+        selectorLinesList.push(doc.splitTextToSize(selText, cardInnerWidth - 14));
+      });
 
-      // 2. Why does it matter?
-      checkPageBreak(50);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.setTextColor(180, 83, 9); // Amber
-      doc.text('Why does it matter?', margin + 10, y);
-      y += 11;
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(88, 103, 125);
-      const whyLines = doc.splitTextToSize(violation.remediation.whyItMatters, contentWidth - 20);
-      doc.text(whyLines, margin + 10, y);
-      y += whyLines.length * 11 + 6;
+      // Code example lines
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(7);
+      let badCodeLines: string[] | null = null;
+      let goodCodeLines: string[] | null = null;
+      let badBoxH = 0;
+      let goodBoxH = 0;
 
-      // 3. Who may be affected?
-      if (violation.remediation.whoIsAffected) {
-        checkPageBreak(40);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(9);
-        doc.setTextColor(107, 70, 217); // Violet
-        doc.text('Who may be affected?', margin + 10, y);
-        y += 11;
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(88, 103, 125);
-        const whoLines = doc.splitTextToSize(violation.remediation.whoIsAffected, contentWidth - 20);
-        doc.text(whoLines, margin + 10, y);
-        y += whoLines.length * 11 + 6;
-      }
-
-      // 4. How to fix it
-      checkPageBreak(50);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.setTextColor(25, 168, 154); // Teal
-      doc.text('How to fix it:', margin + 10, y);
-      y += 11;
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(24, 35, 58);
-      const fixLines = doc.splitTextToSize(violation.remediation.howToFix, contentWidth - 20);
-      doc.text(fixLines, margin + 10, y);
-      y += fixLines.length * 11 + 6;
-
-      // 5. Code Example (if available)
       if (violation.remediation.codeExample) {
-        checkPageBreak(70);
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8.5);
-        doc.setTextColor(88, 103, 125);
-        doc.text('Illustrative Code Example:', margin + 10, y);
-        y += 11;
-
-        // Incorrect code snippet
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(7.5);
-        doc.setTextColor(242, 92, 77); // Coral
-        doc.text('Problematic Pattern:', margin + 10, y);
-        y += 9;
-        doc.setFont('courier', 'normal');
-        doc.setFontSize(7.5);
-        doc.setTextColor(24, 35, 58);
-        const badCodeLines = doc.splitTextToSize(violation.remediation.codeExample.incorrect, contentWidth - 25);
-        doc.text(badCodeLines, margin + 14, y);
-        y += badCodeLines.length * 9 + 4;
-
-        // Correct code snippet
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(7.5);
-        doc.setTextColor(25, 168, 154); // Teal
-        doc.text('Recommended Pattern:', margin + 10, y);
-        y += 9;
-        doc.setFont('courier', 'normal');
-        doc.setFontSize(7.5);
-        doc.setTextColor(24, 35, 58);
-        const goodCodeLines = doc.splitTextToSize(violation.remediation.codeExample.correct, contentWidth - 25);
-        doc.text(goodCodeLines, margin + 14, y);
-        y += goodCodeLines.length * 9 + 6;
+        const bad = doc.splitTextToSize(violation.remediation.codeExample.incorrect, cardInnerWidth - 16);
+        const good = doc.splitTextToSize(violation.remediation.codeExample.correct, cardInnerWidth - 16);
+        badCodeLines = bad;
+        goodCodeLines = good;
+        badBoxH = 10 + bad.length * 8.5 + 4;
+        goodBoxH = 10 + good.length * 8.5 + 4;
       }
 
-      // 6. Technical Details: Standards & Selectors
-      checkPageBreak(50);
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8.5);
-      doc.setTextColor(88, 103, 125);
-      const standards = violation.remediation.wcagCriteria?.join(', ') || violation.tags?.slice(0, 4).join(', ');
-      doc.text(`Rule ID: ${violation.id}   |   Standards: ${standards || 'WCAG 2.1 AA'}`, margin + 10, y);
-      y += 12;
 
-      // Technical Elements (first 2 nodes)
-      if (violation.nodes.length > 0) {
-        doc.setFont('helvetica', 'bold');
-        doc.setFontSize(8);
-        doc.setTextColor(88, 103, 125);
-        doc.text('Affected Elements & CSS Selectors:', margin + 10, y);
-        y += 10;
+      // Compute heights for whole card as well as safe split sections
+      const cardPaddingTop = 16;
+      const cardPaddingBottom = 12;
 
-        violation.nodes.slice(0, 2).forEach((node) => {
-          doc.setFont('courier', 'normal');
-          doc.setFontSize(8);
-          doc.setTextColor(49, 87, 232);
-          const selectorText = node.target.join(' ');
-          const selLines = doc.splitTextToSize(selectorText, contentWidth - 25);
-          doc.text(selLines, margin + 14, y);
-          y += selLines.length * 10 + 2;
+      const sectionAContentH =
+        15 + // badges row
+        titleLines.length * 13 + 5 +
+        10 + problemLines.length * 10.5 + 5 +
+        10 + whyLines.length * 10.5 + 5 +
+        (whoLines ? 10 + whoLines.length * 10.5 + 5 : 0) +
+        10 + fixLines.length * 10.5 + 5;
+
+      let sectionBContentH = 0;
+      if (badCodeLines && goodCodeLines) {
+        sectionBContentH += 10 + badBoxH + 4 + goodBoxH + 6;
+      }
+      sectionBContentH += standardsLines.length * 9.5 + 5;
+      if (selectorLinesList.length > 0) {
+        sectionBContentH += 10;
+        selectorLinesList.forEach((sl) => {
+          sectionBContentH += sl.length * 9 + 3;
         });
-
         if (violation.nodes.length > 2) {
-          doc.setFont('helvetica', 'italic');
-          doc.setFontSize(8);
-          doc.setTextColor(120, 130, 145);
-          doc.text(`(+ ${violation.nodes.length - 2} additional element${violation.nodes.length - 2 === 1 ? '' : 's'} on page)`, margin + 14, y);
-          y += 10;
+          sectionBContentH += 10;
         }
       }
 
-      // Card bounding box
-      const blockHeight = y - itemStartY + 6;
-      doc.roundedRect(margin, itemStartY, contentWidth, blockHeight, 4, 4, 'S');
+      const cardH = cardPaddingTop + sectionAContentH + sectionBContentH + cardPaddingBottom;
+      const freshPageAvailable = maxPageY - headerRunningY; // ~698 pt
+      const cardX = margin + cardPaddingX;
 
-      y += 16;
+      if (idx === 0) {
+        const spaceNeededForFirst = 20 + (cardH <= freshPageAvailable ? cardH : sectionAContentH);
+        if (y + spaceNeededForFirst > maxPageY) {
+          doc.addPage();
+          drawRunningHeader();
+          y = headerRunningY;
+        }
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(12);
+        doc.setTextColor(24, 35, 58);
+        doc.text(`Identified Violations (${report.violations.length})`, margin, y);
+        y += 16;
+      }
+
+      if (cardH <= freshPageAvailable) {
+        // Fits entirely on one page: check if current page has space, otherwise start fresh page
+        if (y + cardH > maxPageY) {
+          doc.addPage();
+          drawRunningHeader();
+          y = headerRunningY;
+        }
+
+        const cardStartY = y;
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(201, 208, 221);
+        doc.setLineWidth(0.75);
+        doc.roundedRect(margin, cardStartY, contentWidth, cardH, 4, 4, 'FD');
+
+        let innerY = cardStartY + cardPaddingTop;
+
+        // 1. Top Badges & Count Row
+        const pillW = drawPill(violation.impact.toUpperCase(), cardX, innerY, impactBg, impactFg);
+        drawPill(violation.id, cardX + pillW + 6, innerY, [242, 240, 255], [24, 35, 58]);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(88, 103, 125);
+        const countLabel = `${violation.nodes.length} element${violation.nodes.length === 1 ? '' : 's'} affected`;
+        doc.text(countLabel, margin + contentWidth - cardPaddingX, innerY - 0.5, { align: 'right' });
+        innerY += 15;
+
+        // 2. Finding Title
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10.5);
+        doc.setTextColor(24, 35, 58);
+        doc.text(titleLines, cardX, innerY);
+        innerY += titleLines.length * 13 + 5;
+
+        // 3. What is the problem?
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(49, 87, 232);
+        doc.text('What is the problem?', cardX, innerY);
+        innerY += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(24, 35, 58);
+        doc.text(problemLines, cardX, innerY);
+        innerY += problemLines.length * 10.5 + 5;
+
+        // 4. Why does it matter?
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(180, 83, 9);
+        doc.text('Why does it matter?', cardX, innerY);
+        innerY += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(88, 103, 125);
+        doc.text(whyLines, cardX, innerY);
+        innerY += whyLines.length * 10.5 + 5;
+
+        // 5. Who may be affected?
+        if (whoLines) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8.5);
+          doc.setTextColor(107, 70, 217);
+          doc.text('Who may be affected?', cardX, innerY);
+          innerY += 10;
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(88, 103, 125);
+          doc.text(whoLines, cardX, innerY);
+          innerY += whoLines.length * 10.5 + 5;
+        }
+
+        // 6. How to fix it:
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(25, 168, 154);
+        doc.text('How to fix it:', cardX, innerY);
+        innerY += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(24, 35, 58);
+        doc.text(fixLines, cardX, innerY);
+        innerY += fixLines.length * 10.5 + 5;
+
+        // 7. Illustrative Code Example
+        if (badCodeLines && goodCodeLines) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(88, 103, 125);
+          doc.text('Illustrative Code Example:', cardX, innerY);
+          innerY += 10;
+
+          // Problematic code box
+          doc.setFillColor(255, 245, 245);
+          doc.setDrawColor(254, 215, 215);
+          doc.setLineWidth(0.5);
+          doc.roundedRect(cardX, innerY, cardInnerWidth, badBoxH, 2, 2, 'FD');
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7);
+          doc.setTextColor(242, 92, 77);
+          doc.text('Problematic Pattern:', cardX + 6, innerY + 8);
+
+          doc.setFont('courier', 'normal');
+          doc.setFontSize(7);
+          doc.setTextColor(24, 35, 58);
+          doc.text(badCodeLines, cardX + 6, innerY + 17);
+          innerY += badBoxH + 4;
+
+          // Recommended code box
+          doc.setFillColor(240, 253, 244);
+          doc.setDrawColor(187, 247, 208);
+          doc.setLineWidth(0.5);
+          doc.roundedRect(cardX, innerY, cardInnerWidth, goodBoxH, 2, 2, 'FD');
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7);
+          doc.setTextColor(25, 168, 154);
+          doc.text('Recommended Pattern:', cardX + 6, innerY + 8);
+
+          doc.setFont('courier', 'normal');
+          doc.setFontSize(7);
+          doc.setTextColor(24, 35, 58);
+          doc.text(goodCodeLines, cardX + 6, innerY + 17);
+          innerY += goodBoxH + 6;
+        }
+
+        // 8. Technical Standards & Rule ID
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(88, 103, 125);
+        doc.text(standardsLines, cardX, innerY);
+        innerY += standardsLines.length * 9.5 + 5;
+
+        // 9. Affected Elements & Selectors
+        if (selectorLinesList.length > 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(88, 103, 125);
+          doc.text('Affected Elements & CSS Selectors:', cardX, innerY);
+          innerY += 10;
+
+          selectorLinesList.forEach((selLines) => {
+            doc.setFont('courier', 'normal');
+            doc.setFontSize(7.5);
+            doc.setTextColor(49, 87, 232);
+            doc.text(selLines, cardX + 6, innerY);
+            innerY += selLines.length * 9 + 3;
+          });
+
+          if (violation.nodes.length > 2) {
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(7.5);
+            doc.setTextColor(140, 150, 165);
+            doc.text(
+              `(+ ${violation.nodes.length - 2} additional element${violation.nodes.length - 2 === 1 ? '' : 's'} on page)`,
+              cardX + 6,
+              innerY
+            );
+            innerY += 10;
+          }
+        }
+
+        y = cardStartY + cardH + 12;
+      } else {
+        // Exceptionally tall finding exceeding a single page: split cleanly across pages
+        const part1H = cardPaddingTop + sectionAContentH + cardPaddingBottom;
+        if (y + part1H > maxPageY) {
+          doc.addPage();
+          drawRunningHeader();
+          y = headerRunningY;
+        }
+
+        const part1StartY = y;
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(201, 208, 221);
+        doc.setLineWidth(0.75);
+        doc.roundedRect(margin, part1StartY, contentWidth, part1H, 4, 4, 'FD');
+
+        let innerY = part1StartY + cardPaddingTop;
+
+        const pillW = drawPill(violation.impact.toUpperCase(), cardX, innerY, impactBg, impactFg);
+        drawPill(violation.id, cardX + pillW + 6, innerY, [242, 240, 255], [24, 35, 58]);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(88, 103, 125);
+        const countLabel = `${violation.nodes.length} element${violation.nodes.length === 1 ? '' : 's'} affected`;
+        doc.text(countLabel, margin + contentWidth - cardPaddingX, innerY - 0.5, { align: 'right' });
+        innerY += 15;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10.5);
+        doc.setTextColor(24, 35, 58);
+        doc.text(titleLines, cardX, innerY);
+        innerY += titleLines.length * 13 + 5;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(49, 87, 232);
+        doc.text('What is the problem?', cardX, innerY);
+        innerY += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(24, 35, 58);
+        doc.text(problemLines, cardX, innerY);
+        innerY += problemLines.length * 10.5 + 5;
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(180, 83, 9);
+        doc.text('Why does it matter?', cardX, innerY);
+        innerY += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(88, 103, 125);
+        doc.text(whyLines, cardX, innerY);
+        innerY += whyLines.length * 10.5 + 5;
+
+        if (whoLines) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8.5);
+          doc.setTextColor(107, 70, 217);
+          doc.text('Who may be affected?', cardX, innerY);
+          innerY += 10;
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(88, 103, 125);
+          doc.text(whoLines, cardX, innerY);
+          innerY += whoLines.length * 10.5 + 5;
+        }
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(25, 168, 154);
+        doc.text('How to fix it:', cardX, innerY);
+        innerY += 10;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(24, 35, 58);
+        doc.text(fixLines, cardX, innerY);
+
+        y = part1StartY + part1H + 12;
+
+        // Continuation Section B on next page
+        const continuationHeaderH = 22;
+        const part2H = cardPaddingTop + continuationHeaderH + sectionBContentH + cardPaddingBottom;
+        if (y + part2H > maxPageY) {
+          doc.addPage();
+          drawRunningHeader();
+          y = headerRunningY;
+        }
+
+        const part2StartY = y;
+        doc.setFillColor(255, 255, 255);
+        doc.setDrawColor(201, 208, 221);
+        doc.setLineWidth(0.75);
+        doc.roundedRect(margin, part2StartY, contentWidth, part2H, 4, 4, 'FD');
+
+        let innerY2 = part2StartY + cardPaddingTop;
+
+        const pillW2 = drawPill(violation.impact.toUpperCase(), cardX, innerY2, impactBg, impactFg);
+        const pillW2Id = drawPill(violation.id, cardX + pillW2 + 6, innerY2, [242, 240, 255], [24, 35, 58]);
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(9);
+        doc.setTextColor(88, 103, 125);
+        const contTitle = `${violation.title.slice(0, 42)}... (Continued)`;
+        doc.text(contTitle, cardX + pillW2 + 6 + pillW2Id + 8, innerY2);
+        innerY2 += 18;
+
+        if (badCodeLines && goodCodeLines) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(88, 103, 125);
+          doc.text('Illustrative Code Example:', cardX, innerY2);
+          innerY2 += 10;
+
+          doc.setFillColor(255, 245, 245);
+          doc.setDrawColor(254, 215, 215);
+          doc.setLineWidth(0.5);
+          doc.roundedRect(cardX, innerY2, cardInnerWidth, badBoxH, 2, 2, 'FD');
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7);
+          doc.setTextColor(242, 92, 77);
+          doc.text('Problematic Pattern:', cardX + 6, innerY2 + 8);
+
+          doc.setFont('courier', 'normal');
+          doc.setFontSize(7);
+          doc.setTextColor(24, 35, 58);
+          doc.text(badCodeLines, cardX + 6, innerY2 + 17);
+          innerY2 += badBoxH + 4;
+
+          doc.setFillColor(240, 253, 244);
+          doc.setDrawColor(187, 247, 208);
+          doc.setLineWidth(0.5);
+          doc.roundedRect(cardX, innerY2, cardInnerWidth, goodBoxH, 2, 2, 'FD');
+
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(7);
+          doc.setTextColor(25, 168, 154);
+          doc.text('Recommended Pattern:', cardX + 6, innerY2 + 8);
+
+          doc.setFont('courier', 'normal');
+          doc.setFontSize(7);
+          doc.setTextColor(24, 35, 58);
+          doc.text(goodCodeLines, cardX + 6, innerY2 + 17);
+          innerY2 += goodBoxH + 6;
+        }
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(7.5);
+        doc.setTextColor(88, 103, 125);
+        doc.text(standardsLines, cardX, innerY2);
+        innerY2 += standardsLines.length * 9.5 + 5;
+
+        if (selectorLinesList.length > 0) {
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8);
+          doc.setTextColor(88, 103, 125);
+          doc.text('Affected Elements & CSS Selectors:', cardX, innerY2);
+          innerY2 += 10;
+
+          selectorLinesList.forEach((selLines) => {
+            doc.setFont('courier', 'normal');
+            doc.setFontSize(7.5);
+            doc.setTextColor(49, 87, 232);
+            doc.text(selLines, cardX + 6, innerY2);
+            innerY2 += selLines.length * 9 + 3;
+          });
+
+          if (violation.nodes.length > 2) {
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(7.5);
+            doc.setTextColor(140, 150, 165);
+            doc.text(
+              `(+ ${violation.nodes.length - 2} additional element${violation.nodes.length - 2 === 1 ? '' : 's'} on page)`,
+              cardX + 6,
+              innerY2
+            );
+            innerY2 += 10;
+          }
+        }
+
+        y = part2StartY + part2H + 12;
+      }
     });
   } else {
     // Zero violations state in PDF
-    checkPageBreak(60);
+    ensureSpace(55);
     doc.setFillColor(221, 246, 241); // Teal soft
-    doc.roundedRect(margin, y, contentWidth, 50, 4, 4, 'F');
+    doc.roundedRect(margin, y, contentWidth, 48, 4, 4, 'F');
     doc.setDrawColor(25, 168, 154);
     doc.setLineWidth(0.5);
-    doc.roundedRect(margin, y, contentWidth, 50, 4, 4, 'S');
+    doc.roundedRect(margin, y, contentWidth, 48, 4, 4, 'S');
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.setTextColor(25, 168, 154);
-    doc.text('No Automated Violations Detected', margin + 12, y + 20);
+    doc.text('No Automated Violations Detected', margin + 12, y + 18);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8.5);
@@ -388,35 +680,39 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
     doc.text(
       'The axe-core engine evaluated the submitted page DOM and detected no automated accessibility violations.',
       margin + 12,
-      y + 35
+      y + 32
     );
-    y += 66;
+    y += 60;
   }
 
   // ==========================================
-  // 4. TESTING DISCLAIMER & FOOTER
+  // 4. TESTING DISCLAIMER & SCOPE
   // ==========================================
-  checkPageBreak(80);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  const disclaimerLines = doc.splitTextToSize(report.disclaimer, contentWidth - 20);
+  const disclaimerH = 22 + disclaimerLines.length * 9.5 + 8;
+
+  ensureSpace(disclaimerH);
 
   doc.setFillColor(242, 240, 255);
-  doc.roundedRect(margin, y, contentWidth, 52, 4, 4, 'F');
+  doc.roundedRect(margin, y, contentWidth, disclaimerH, 4, 4, 'F');
   doc.setDrawColor(201, 208, 221);
   doc.setLineWidth(0.5);
-  doc.roundedRect(margin, y, contentWidth, 52, 4, 4, 'S');
+  doc.roundedRect(margin, y, contentWidth, disclaimerH, 4, 4, 'S');
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(107, 70, 217); // Violet
-  doc.text('AUTOMATED EVALUATION SCOPE & LIMITATIONS', margin + 10, y + 14);
+  doc.text('AUTOMATED EVALUATION SCOPE & LIMITATIONS', margin + 10, y + 13);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(88, 103, 125);
-  const disclaimerLines = doc.splitTextToSize(report.disclaimer, contentWidth - 20);
-  doc.text(disclaimerLines, margin + 10, y + 25);
+  doc.text(disclaimerLines, margin + 10, y + 24);
 
   // ==========================================
-  // 5. PAGE NUMBERING IN FOOTER
+  // 5. PAGE NUMBERING IN FOOTER (ALL PAGES)
   // ==========================================
   const totalPages = doc.getNumberOfPages();
   for (let i = 1; i <= totalPages; i++) {
@@ -427,7 +723,7 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
     doc.text(
       `WebForAll Accessibility Report  |  Page ${i} of ${totalPages}`,
       pageWidth / 2,
-      pageHeight - 20,
+      pageHeight - 18,
       { align: 'center' }
     );
   }

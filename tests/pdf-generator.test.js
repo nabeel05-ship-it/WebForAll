@@ -53,6 +53,46 @@ test('createPdfDocument handles zero violations report cleanly', () => {
   assert.ok(output.byteLength > 500);
 });
 
+test('createPdfDocument handles long CSS selectors and WCAG criteria without errors', async () => {
+  const base = await getDemoReport();
+  const deepReport = JSON.parse(JSON.stringify(base));
+  deepReport.violations[0].nodes[0].target = [
+    'html > body.theme-dark > div#__next > main > section.products > div.card-wrapper-item:nth-child(4) > div.card-inner-container-with-extra-long-selector-name > article.product-item-card > div.card-details-wrapper > a.btn.btn-primary.btn-lg.stretched-link[data-tracking-id="promo-banner-winter-sale-2026-v2-cta-button-active"]'
+  ];
+  deepReport.violations[0].remediation.wcagCriteria = [
+    'WCAG 1.1.1 Non-text Content (Level A)',
+    'WCAG 1.3.1 Info and Relationships (Level A)',
+    'WCAG 4.1.2 Name, Role, Value (Level A)',
+    'Section 508 1194.22(a)',
+    'EN 301 549 9.1.1.1'
+  ];
+
+  const doc = createPdfDocument(deepReport);
+  assert.ok(doc);
+  const pages = doc.getNumberOfPages();
+  assert.ok(pages >= 2);
+  const output = doc.output('arraybuffer');
+  assert.ok(output.byteLength > 1000);
+});
+
+test('createPdfDocument handles large violation count with consistent multi-page pagination', async () => {
+  const base = await getDemoReport();
+  const manyReport = JSON.parse(JSON.stringify(base));
+  const duplicated = [];
+  for (let i = 0; i < 10; i++) {
+    const v = JSON.parse(JSON.stringify(base.violations[i % base.violations.length]));
+    v.title = `Violation ${i + 1}: ${v.title}`;
+    duplicated.push(v);
+  }
+  manyReport.violations = duplicated;
+  manyReport.summary.totalViolations = 10;
+
+  const doc = createPdfDocument(manyReport);
+  assert.ok(doc);
+  const pages = doc.getNumberOfPages();
+  assert.ok(pages >= 5, `Expected at least 5 pages for 10 full findings, got ${pages}`);
+});
+
 test('POST /api/report/pdf endpoint generates genuine PDF with application/pdf and attachment headers', async () => {
   const { POST: pdfRouteHandler } = await import('../app/api/report/pdf/route.ts');
   const { NextRequest } = await import('next/server');
