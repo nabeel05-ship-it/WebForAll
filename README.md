@@ -11,7 +11,7 @@
 [![axe-core](https://img.shields.io/badge/axe--core-4.14.0-blue)](https://github.com/dequelabs/axe-core)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.19-38b2ac?logo=tailwindcss)](https://tailwindcss.com/)
 
-[Live Demo](https://webforall-seven.vercel.app/) &bull; [GitHub Repository](https://github.com/nabeel05-ship-it/webforall) &bull; 
+[Live Demo](https://webforall-seven.vercel.app/) &bull; [GitHub Repository](https://github.com/nabeel05-ship-it/webforall) 
 
 </div>
 
@@ -67,7 +67,7 @@ WebForAll bridges the gap between raw accessibility specifications and practical
 └─────────────────┘       └─────────────────┘       └─────────┬────────┘
                                                               │
 ┌─────────────────┐       ┌─────────────────┐                 │
-│ 6. Export PDF / │ <──── │ 5. Remediation  │ <───────────────┘
+│ 6. Export PDF / │ <──── │ 5. Remediation  │ <─────┌─────────v────────┐
 │   JSON Report   │       │    Catalog Map  │       │ 4. axe-core Scan │
 └─────────────────┘       └─────────────────┘       │    (JSDOM DOM)   │
                                                     └──────────────────┘
