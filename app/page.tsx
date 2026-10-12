@@ -26,7 +26,6 @@ import {
 import ReportView from '@/components/ReportView';
 import { AccessibilityReport } from '@/lib/scanner/types';
 import { X as ClearIcon } from 'lucide-react';
-import AccessibilityScanVisualization from '@/components/AccessibilityScanVisualization';
 
 export default function HomePage() {
   const [urlInput, setUrlInput] = useState('');
@@ -428,16 +427,6 @@ export default function HomePage() {
                     Explore Accessibility Field Guide &rarr;
                   </Link>
                 </div>
-              </motion.div>
-
-              {/* SIGNATURE ACCESSIBILITY SCAN VISUALIZATION */}
-              <motion.div
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.42, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-                className="max-w-4xl mx-auto pt-10"
-              >
-                <AccessibilityScanVisualization />
               </motion.div>
             </section>
 
