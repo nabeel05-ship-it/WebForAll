@@ -372,61 +372,142 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
           </div>
         </div>
 
-        {/* EXPRESSIVE SIGNAL SUMMARY MODULES */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
-          <div className="p-4 bg-canvas rounded-xl border border-border-ink text-center shadow-subtle">
-            <span className="block text-3xl font-extrabold text-ink tabular-nums">
+        {/* EXPRESSIVE SIGNAL SUMMARY MODULES (ALL 8 METRICS INTERACTIVE) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2.5">
+          <button
+            type="button"
+            onClick={() => { setActiveTab('violations'); setImpactFilter('all'); }}
+            className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
+              activeTab === 'violations' && impactFilter === 'all'
+                ? 'bg-surface border-electric ring-2 ring-electric/20 shadow-card'
+                : 'bg-canvas border-border-ink hover:border-border-strong hover:bg-surface shadow-subtle'
+            }`}
+            title="Show all violations"
+          >
+            <span className="block text-2xl sm:text-3xl font-extrabold text-ink tabular-nums">
               {report.summary.totalViolations}
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-ink-muted mt-1 block">
-              Total Violations
+            <span className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mt-1 block">
+              Total Issues
             </span>
-          </div>
+          </button>
 
-          <div className="p-4 bg-canvas rounded-xl border border-border-ink text-center shadow-subtle">
-            <span className="block text-3xl font-extrabold text-ink tabular-nums">
+          <div className="p-3.5 bg-canvas rounded-xl border border-border-ink text-center shadow-subtle">
+            <span className="block text-2xl sm:text-3xl font-extrabold text-ink tabular-nums">
               {report.summary.totalAffectedElements}
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-ink-muted mt-1 block">
-              Affected Nodes
+            <span className="text-[11px] font-bold uppercase tracking-wider text-ink-muted mt-1 block">
+              Nodes
             </span>
           </div>
 
-          <div className="p-4 bg-coral-soft rounded-xl border border-coral/30 text-center shadow-subtle">
-            <span className="block text-3xl font-extrabold text-coral tabular-nums">
+          <button
+            type="button"
+            onClick={() => { setActiveTab('violations'); setImpactFilter('critical'); }}
+            className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
+              activeTab === 'violations' && impactFilter === 'critical'
+                ? 'bg-coral-soft border-coral ring-2 ring-coral/20 shadow-card'
+                : 'bg-coral-soft/70 border-coral/30 hover:border-coral shadow-subtle'
+            }`}
+            title="Filter by Critical violations"
+          >
+            <span className="block text-2xl sm:text-3xl font-extrabold text-coral tabular-nums">
               {report.summary.byImpact.critical}
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-coral mt-1 block">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-coral mt-1 block">
               Critical
             </span>
-          </div>
+          </button>
 
-          <div className="p-4 bg-golden-soft rounded-xl border border-golden/40 text-center shadow-subtle">
-            <span className="block text-3xl font-extrabold text-ink tabular-nums">
+          <button
+            type="button"
+            onClick={() => { setActiveTab('violations'); setImpactFilter('serious'); }}
+            className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
+              activeTab === 'violations' && impactFilter === 'serious'
+                ? 'bg-golden-soft border-golden ring-2 ring-golden/20 shadow-card'
+                : 'bg-golden-soft/70 border-golden/40 hover:border-golden shadow-subtle'
+            }`}
+            title="Filter by Serious violations"
+          >
+            <span className="block text-2xl sm:text-3xl font-extrabold text-ink tabular-nums">
               {report.summary.byImpact.serious}
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-ink mt-1 block">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-ink mt-1 block">
               Serious
             </span>
-          </div>
+          </button>
 
-          <div className="p-4 bg-violet-soft rounded-xl border border-violet/30 text-center shadow-subtle">
-            <span className="block text-3xl font-extrabold text-violet tabular-nums">
+          <button
+            type="button"
+            onClick={() => { setActiveTab('violations'); setImpactFilter('moderate'); }}
+            className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
+              activeTab === 'violations' && impactFilter === 'moderate'
+                ? 'bg-golden-soft/80 border-[#E5832E] ring-2 ring-[#E5832E]/20 shadow-card'
+                : 'bg-golden-soft/40 border-golden/30 hover:border-golden shadow-subtle'
+            }`}
+            title="Filter by Moderate violations"
+          >
+            <span className="block text-2xl sm:text-3xl font-extrabold text-[#D97706] tabular-nums">
+              {report.summary.byImpact.moderate}
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#D97706] mt-1 block">
+              Moderate
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => { setActiveTab('violations'); setImpactFilter('minor'); }}
+            className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
+              activeTab === 'violations' && impactFilter === 'minor'
+                ? 'bg-electric-soft border-electric ring-2 ring-electric/20 shadow-card'
+                : 'bg-electric-soft/60 border-electric/30 hover:border-electric shadow-subtle'
+            }`}
+            title="Filter by Minor violations"
+          >
+            <span className="block text-2xl sm:text-3xl font-extrabold text-electric tabular-nums">
+              {report.summary.byImpact.minor}
+            </span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-electric mt-1 block">
+              Minor
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('incomplete')}
+            className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
+              activeTab === 'incomplete'
+                ? 'bg-violet-soft border-violet ring-2 ring-violet/20 shadow-card'
+                : 'bg-violet-soft/70 border-violet/30 hover:border-violet shadow-subtle'
+            }`}
+            title="View checks needing manual human review"
+          >
+            <span className="block text-2xl sm:text-3xl font-extrabold text-violet tabular-nums">
               {report.summary.incompleteCount}
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-violet mt-1 block">
-              Needs Review
+            <span className="text-[11px] font-bold uppercase tracking-wider text-violet mt-1 block">
+              Review
             </span>
-          </div>
+          </button>
 
-          <div className="p-4 bg-teal-soft rounded-xl border border-teal/30 text-center shadow-subtle">
-            <span className="block text-3xl font-extrabold text-teal tabular-nums">
+          <button
+            type="button"
+            onClick={() => setActiveTab('passes')}
+            className={`p-3.5 rounded-xl border text-center transition-all cursor-pointer ${
+              activeTab === 'passes'
+                ? 'bg-teal-soft border-teal ring-2 ring-teal/20 shadow-card'
+                : 'bg-teal-soft/70 border-teal/30 hover:border-teal shadow-subtle'
+            }`}
+            title="View passed automated rules"
+          >
+            <span className="block text-2xl sm:text-3xl font-extrabold text-teal tabular-nums">
               {report.summary.passedCount}
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-teal mt-1 block">
-              Passed Rules
+            <span className="text-[11px] font-bold uppercase tracking-wider text-teal mt-1 block">
+              Passed
             </span>
-          </div>
+          </button>
         </div>
 
         {/* INTERACTIVE SEVERITY DISTRIBUTION RATIO BAR */}
@@ -599,6 +680,14 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-9 py-2 text-sm border border-border-ink rounded-lg bg-canvas text-ink focus:bg-surface focus:border-electric focus:ring-2 focus:ring-electric/20 focus:outline-none font-medium transition-all"
                 />
+                {!searchQuery && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-y-0 right-2.5 my-auto h-5 hidden sm:inline-flex items-center text-[10px] font-mono font-bold bg-surface border border-border-ink px-1.5 rounded text-ink-muted pointer-events-none select-none"
+                  >
+                    /
+                  </span>
+                )}
                 {searchQuery && (
                   <button
                     type="button"

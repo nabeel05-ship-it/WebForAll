@@ -9,6 +9,7 @@ import { Variants, Transition } from 'motion/react';
 export const easeOutCubic: Transition['ease'] = [0.215, 0.61, 0.355, 1];
 export const easeSmooth: Transition['ease'] = [0.16, 1, 0.3, 1];
 export const easeSpring: Transition['ease'] = [0.34, 1.56, 0.64, 1];
+export const easeInOutCubic: Transition['ease'] = [0.65, 0, 0.35, 1];
 
 /**
  * Reusable animation variants configured for subtle, professional motion.
@@ -59,8 +60,8 @@ export const containerStaggerVariants: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.03,
+      staggerChildren: 0.05,
+      delayChildren: 0.02,
     },
   },
 };
@@ -70,8 +71,8 @@ export const containerStaggerFastVariants: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.035,
-      delayChildren: 0.015,
+      staggerChildren: 0.03,
+      delayChildren: 0.01,
     },
   },
 };
@@ -94,7 +95,7 @@ export const buttonInteractive = {
 };
 
 export const iconInteractive = {
-  hover: { scale: 1.1, rotate: 2, transition: { duration: 0.15 } },
+  hover: { scale: 1.08, rotate: 2, transition: { duration: 0.15 } },
   tap: { scale: 0.95 },
 };
 
@@ -119,7 +120,7 @@ export const accordionVariants: Variants = {
     opacity: 0,
     height: 0,
     overflow: 'hidden',
-    transition: { duration: 0.25, ease: easeSmooth },
+    transition: { duration: 0.24, ease: easeSmooth },
   },
   expanded: {
     opacity: 1,
@@ -136,10 +137,37 @@ export const livePulseVariants: Variants = {
     scale: [1, 1.08, 1],
     opacity: [0.8, 1, 0.8],
     transition: {
-      duration: 2,
+      duration: 2.2,
       repeat: Infinity,
       ease: 'easeInOut',
     },
   },
 };
 
+/**
+ * Spring configurations for layout pills, active tabs, and navigation
+ */
+export const springPill = {
+  type: 'spring' as const,
+  stiffness: 420,
+  damping: 32,
+};
+
+export const springDrawer = {
+  type: 'spring' as const,
+  stiffness: 340,
+  damping: 28,
+};
+
+/**
+ * Metric card count reveal variants
+ */
+export const metricCardVariants: Variants = {
+  hidden: { opacity: 0, scale: 0.94, y: 8 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: 0.32, ease: easeSmooth },
+  },
+};

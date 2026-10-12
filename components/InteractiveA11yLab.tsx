@@ -376,17 +376,20 @@ export default function InteractiveA11yLab() {
                 </div>
 
                 {!passesAA && (
-                  <div className="p-2.5 rounded-lg bg-coral-soft/60 border border-coral/30 flex items-center justify-between gap-2 text-xs">
+                  <div className="p-2.5 rounded-lg bg-coral-soft/60 border border-coral/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
                     <span className="text-coral font-bold flex items-center gap-1">
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                      Fails WCAG AA minimum
+                      <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                      Fails WCAG AA minimum (4.5:1)
                     </span>
                     <button
                       type="button"
-                      onClick={() => setTextColor('#18233A')}
-                      className="px-2.5 py-1 bg-surface hover:bg-teal-soft text-teal font-bold rounded border border-teal/30 transition-colors cursor-pointer"
+                      onClick={() => {
+                        const targetColor = lum2 > 0.35 ? '#18233A' : '#FFFFFF';
+                        setTextColor(targetColor);
+                      }}
+                      className="px-2.5 py-1 bg-surface hover:bg-teal-soft text-teal font-bold rounded border border-teal/30 transition-colors cursor-pointer self-start sm:self-auto"
                     >
-                      Auto-fix to ink #18233A &rarr;
+                      Auto-fix to {lum2 > 0.35 ? '#18233A' : '#FFFFFF'} (guarantees ≥ 7:1) &rarr;
                     </button>
                   </div>
                 )}

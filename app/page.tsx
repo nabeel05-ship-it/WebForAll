@@ -26,6 +26,7 @@ import {
 import ReportView from '@/components/ReportView';
 import { AccessibilityReport } from '@/lib/scanner/types';
 import { X as ClearIcon } from 'lucide-react';
+import AccessibilityScanVisualization from '@/components/AccessibilityScanVisualization';
 
 export default function HomePage() {
   const [urlInput, setUrlInput] = useState('');
@@ -64,13 +65,26 @@ export default function HomePage() {
 
     setScanError(null);
     setIsScanning(true);
-    setScanStepText('Verifying address & network boundary...');
+    setScanStepText('Validating URL destination & protocol...');
+
+    const timers: NodeJS.Timeout[] = [];
+    timers.push(
+      setTimeout(() => {
+        setScanStepText('Resolving DNS & filtering private network boundaries...');
+      }, 350)
+    );
+    timers.push(
+      setTimeout(() => {
+        setScanStepText('Constructing sandboxed JSDOM in ephemeral memory...');
+      }, 950)
+    );
+    timers.push(
+      setTimeout(() => {
+        setScanStepText('Evaluating axe-core 4.14 WCAG rules across DOM nodes...');
+      }, 1600)
+    );
 
     try {
-      setTimeout(() => {
-        setScanStepText('Constructing DOM & evaluating axe-core 4.14 rules...');
-      }, 750);
-
       const res = await fetch('/api/scan', {
         method: 'POST',
         headers: {
@@ -78,6 +92,8 @@ export default function HomePage() {
         },
         body: JSON.stringify({ url: target }),
       });
+
+      timers.forEach(clearTimeout);
 
       let data: any = null;
       let rawText = '';
@@ -116,6 +132,7 @@ export default function HomePage() {
       setScanStepText('');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err: unknown) {
+      timers.forEach(clearTimeout);
       const error = err as Error;
       setScanError({
         message: `Network error: ${error.message || 'Unable to communicate with the scanner service.'}`,
@@ -225,8 +242,8 @@ export default function HomePage() {
                 className="space-y-6"
               >
                 <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-violet-soft border border-violet/30 text-violet text-xs font-extrabold uppercase tracking-wider shadow-subtle">
-                  <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
-                  <span>Build a Web That Works for Everyone</span>
+                  <span className="w-2 h-2 rounded-full bg-violet animate-pulse" aria-hidden="true" />
+                  <span>Making the web more accessible, one scan at a time</span>
                 </div>
 
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-ink leading-[1.08] max-w-4xl mx-auto">
@@ -413,62 +430,14 @@ export default function HomePage() {
                 </div>
               </motion.div>
 
-              {/* TECHNICAL SIGNAL INSPECTOR VISUALIZER (Hero Graphic) */}
+              {/* SIGNATURE ACCESSIBILITY SCAN VISUALIZATION */}
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.42, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
-                className="max-w-3xl mx-auto pt-10"
+                className="max-w-4xl mx-auto pt-10"
               >
-                <div className="bg-surface rounded-2xl border-2 border-border-ink p-4 sm:p-6 shadow-card text-left space-y-4 relative overflow-hidden">
-                  {/* Window Title Bar */}
-                  <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
-                    <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full bg-coral/80" />
-                      <span className="w-3 h-3 rounded-full bg-golden/80" />
-                      <span className="w-3 h-3 rounded-full bg-teal/80" />
-                      <span className="font-mono text-xs font-bold text-ink-muted ml-2">
-                        axe-core virtual inspection stream
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-soft text-teal font-mono text-[11px] font-bold">
-                        <CheckCircle2 className="w-3 h-3" />
-                        Engine Ready
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Visualizer Semantic DOM Stream */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
-                    <div className="p-3 bg-canvas rounded-xl border border-border-ink space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] text-ink-muted font-bold font-sans">01. Landmark Trees</span>
-                        <span className="text-[10px] text-teal font-bold bg-teal-soft px-1.5 py-0.5 rounded">Pass</span>
-                      </div>
-                      <code className="text-electric font-semibold block">&lt;main id=&quot;content&quot;&gt;</code>
-                      <p className="text-[11px] text-ink-muted font-sans font-medium">Valid top-level structure</p>
-                    </div>
-
-                    <div className="p-3 bg-canvas rounded-xl border border-border-ink space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] text-ink-muted font-bold font-sans">02. Accessible Names</span>
-                        <span className="text-[10px] text-coral font-bold bg-coral-soft px-1.5 py-0.5 rounded">Check</span>
-                      </div>
-                      <code className="text-coral font-semibold block">&lt;button aria-label=&quot;...&quot;&gt;</code>
-                      <p className="text-[11px] text-ink-muted font-sans font-medium">Ensures screen reader names</p>
-                    </div>
-
-                    <div className="p-3 bg-canvas rounded-xl border border-border-ink space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] text-ink-muted font-bold font-sans">03. Contrast Ratio</span>
-                        <span className="text-[10px] text-golden font-bold bg-golden-soft text-ink px-1.5 py-0.5 rounded">7.2 : 1</span>
-                      </div>
-                      <code className="text-violet font-semibold block">WCAG AA &bull; 4.5:1 min</code>
-                      <p className="text-[11px] text-ink-muted font-sans font-medium">High readability contrast</p>
-                    </div>
-                  </div>
-                </div>
+                <AccessibilityScanVisualization />
               </motion.div>
             </section>
 
