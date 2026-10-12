@@ -36,6 +36,51 @@ export async function runAxeScan(options: RunScanOptions): Promise<Accessibility
     runScripts: 'outside-only',
   });
 
+  const win = dom.window;
+
+  // Provide essential DOM API shims required by axe-core in headless virtual DOM
+  if (typeof win.document.elementsFromPoint !== 'function') {
+    win.document.elementsFromPoint = () => [];
+  }
+  if (typeof win.document.elementFromPoint !== 'function') {
+    win.document.elementFromPoint = () => null;
+  }
+  if (win.HTMLCanvasElement && win.HTMLCanvasElement.prototype) {
+    (win.HTMLCanvasElement.prototype as any).getContext = function (contextId: string) {
+      if (contextId === '2d') {
+        return {
+          canvas: this,
+          measureText: (text: string) => ({ width: (text || '').length * 8 }),
+          fillText: () => {},
+          strokeText: () => {},
+          clearRect: () => {},
+          fillRect: () => {},
+          strokeRect: () => {},
+          getImageData: () => ({ data: new Uint8ClampedArray(4) }),
+          putImageData: () => {},
+          createImageData: () => ({ data: new Uint8ClampedArray(4) }),
+          setTransform: () => {},
+          resetTransform: () => {},
+          save: () => {},
+          restore: () => {},
+          scale: () => {},
+          rotate: () => {},
+          translate: () => {},
+          transform: () => {},
+          beginPath: () => {},
+          closePath: () => {},
+          moveTo: () => {},
+          lineTo: () => {},
+          rect: () => {},
+          arc: () => {},
+          fill: () => {},
+          stroke: () => {},
+        } as unknown as RenderingContext;
+      }
+      return null;
+    };
+  }
+
   const documentElement = dom.window.document.documentElement;
 
   // Execute axe-core with WCAG 2.0 / 2.1 Level A and AA tags plus best practices
@@ -79,14 +124,33 @@ export async function runAxeScan(options: RunScanOptions): Promise<Accessibility
   violations.sort((a, b) => impactWeight[b.impact] - impactWeight[a.impact]);
 
   // Process Incomplete checks
-  const incomplete: IncompleteCheck[] = (axeResults.incomplete || []).map((inc) => ({
-    id: inc.id,
-    description: inc.description,
-    help: inc.help,
-    helpUrl: inc.helpUrl,
-    nodesCount: inc.nodes ? inc.nodes.length : 0,
-    reason: 'Requires manual verification or visual context not fully computable automatically.',
-  }));
+  const incomplete: IncompleteCheck[] = (axeResults.incomplete || []).map((inc) => {
+    let reason = 'Requires manual verification or visual context not fully computable automatically.';
+    if (inc.nodes && inc.nodes.length > 0) {
+      const allChecks = [
+        ...(inc.nodes[0].any || []),
+        ...(inc.nodes[0].all || []),
+        ...(inc.nodes[0].none || []),
+      ];
+      const checkWithMessage = allChecks.find(
+        (c) => c.message && c.message.trim().length > 0 && c.id !== 'error-occurred'
+      );
+      if (checkWithMessage && checkWithMessage.message) {
+        reason = checkWithMessage.message;
+      } else if (inc.nodes[0].failureSummary) {
+        reason = inc.nodes[0].failureSummary;
+      }
+    }
+
+    return {
+      id: inc.id,
+      description: inc.description,
+      help: inc.help,
+      helpUrl: inc.helpUrl,
+      nodesCount: inc.nodes ? inc.nodes.length : 0,
+      reason,
+    };
+  });
 
   // Process Passed checks
   const passes: PassedCheck[] = (axeResults.passes || []).map((p) => ({

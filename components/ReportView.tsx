@@ -1101,42 +1101,52 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
             </div>
           </div>
 
-          <div className="space-y-3.5">
-            {report.incomplete.map((item) => (
-              <div
-                key={item.id}
-                className="p-5 bg-surface rounded-xl border border-border-ink shadow-subtle space-y-2.5"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-violet-soft text-violet border border-violet/30">
-                      {item.id}
-                    </span>
-                    <span className="text-xs text-ink-muted font-semibold">
-                      {item.nodesCount} element{item.nodesCount !== 1 ? 's' : ''} evaluated
-                    </span>
+          {report.incomplete.length === 0 ? (
+            <div className="p-8 text-center bg-surface rounded-xl border border-border-ink shadow-subtle space-y-2">
+              <CheckCircle2 className="w-10 h-10 text-teal mx-auto" aria-hidden="true" />
+              <h3 className="text-base font-bold text-ink">No checks requiring manual review</h3>
+              <p className="text-xs text-ink-muted max-w-md mx-auto">
+                axe-core evaluated all applicable rules conclusively without requiring visual context verification.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3.5">
+              {report.incomplete.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-5 bg-surface rounded-xl border border-border-ink shadow-subtle space-y-2.5"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-violet-soft text-violet border border-violet/30">
+                        {item.id}
+                      </span>
+                      <span className="text-xs text-ink-muted font-semibold">
+                        {item.nodesCount} element{item.nodesCount !== 1 ? 's' : ''} evaluated
+                      </span>
+                    </div>
+                    {item.helpUrl && (
+                      <a
+                        href={item.helpUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-electric hover:underline inline-flex items-center font-bold"
+                      >
+                        Rule Info
+                        <ExternalLink className="w-3.5 h-3.5 ml-1" aria-hidden="true" />
+                      </a>
+                    )}
                   </div>
-                  {item.helpUrl && (
-                    <a
-                      href={item.helpUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-electric hover:underline inline-flex items-center font-bold"
-                    >
-                      Rule Info
-                      <ExternalLink className="w-3.5 h-3.5 ml-1" aria-hidden="true" />
-                    </a>
-                  )}
+                  <h2 className="text-base font-bold text-ink">{item.help}</h2>
+                  <p className="text-sm text-ink-muted leading-relaxed">{item.description}</p>
+                  <p className="text-xs text-ink bg-surface-subtle p-3 rounded-lg border border-border-subtle font-medium">
+                    <span className="font-bold text-violet">Review Requirement: </span>
+                    {item.reason}
+                  </p>
                 </div>
-                <h2 className="text-base font-bold text-ink">{item.help}</h2>
-                <p className="text-sm text-ink-muted leading-relaxed">{item.description}</p>
-                <p className="text-xs text-ink bg-surface-subtle p-3 rounded-lg border border-border-subtle font-medium">
-                  <span className="font-bold text-violet">Review Requirement: </span>
-                  {item.reason}
-                </p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -1155,25 +1165,48 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {report.passes.map((pass) => (
-              <div
-                key={pass.id}
-                className="p-4 bg-surface rounded-xl border border-border-ink shadow-subtle space-y-1.5"
-              >
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-teal flex-shrink-0" aria-hidden="true" />
-                  <span className="font-mono text-xs font-bold text-ink bg-canvas px-2 py-0.5 rounded border border-border-ink">
-                    {pass.id}
-                  </span>
+          {report.passes.length === 0 ? (
+            <div className="p-8 text-center bg-surface rounded-xl border border-border-ink shadow-subtle space-y-2">
+              <Info className="w-10 h-10 text-ink-muted mx-auto" aria-hidden="true" />
+              <h3 className="text-base font-bold text-ink">No passed checks recorded</h3>
+              <p className="text-xs text-ink-muted max-w-md mx-auto">
+                No automated rules evaluated to pass for the scanned page structure.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {report.passes.map((pass) => (
+                <div
+                  key={pass.id}
+                  className="p-4 bg-surface rounded-xl border border-border-ink shadow-subtle space-y-1.5"
+                >
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-teal flex-shrink-0" aria-hidden="true" />
+                    <span className="font-mono text-xs font-bold text-ink bg-canvas px-2 py-0.5 rounded border border-border-ink">
+                      {pass.id}
+                    </span>
+                  </div>
+                  <h2 className="text-sm font-bold text-ink">{pass.help}</h2>
+                  <p className="text-xs text-ink-muted leading-relaxed">{pass.description}</p>
                 </div>
-                <h2 className="text-sm font-bold text-ink">{pass.help}</h2>
-                <p className="text-xs text-ink-muted leading-relaxed">{pass.description}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
+
+      {/* ============================================================ */}
+      {/* EVALUATION SCOPE & METHODOLOGY NOTE */}
+      {/* ============================================================ */}
+      <div className="p-4 bg-canvas rounded-xl border border-border-ink text-xs text-ink-muted flex items-start gap-3 shadow-subtle no-print">
+        <Info className="w-4 h-4 text-electric flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <div className="space-y-1">
+          <span className="font-bold text-ink block">Evaluation Methodology & Scanning Scope</span>
+          <p className="leading-relaxed">
+            WebForAll evaluates server-rendered HTML using axe-core within a headless virtual DOM environment. It detects syntax, structural, and semantic accessibility barriers (covering approximately 30% to 50% of WCAG criteria). Client-side interactive states, authenticated routes, and visual context require supplementary manual keyboard navigation and screen reader testing.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
