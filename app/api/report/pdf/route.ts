@@ -25,9 +25,9 @@ export async function POST(req: NextRequest) {
     // Generate genuine PDF document
     const doc = createPdfDocument(report);
     const pdfArrayBuffer = doc.output('arraybuffer');
-    const pdfBuffer = Buffer.from(pdfArrayBuffer);
+    const uint8Array = new Uint8Array(pdfArrayBuffer);
 
-    if (!pdfBuffer || pdfBuffer.length === 0) {
+    if (!uint8Array || uint8Array.byteLength === 0) {
       return NextResponse.json(
         {
           success: false,
@@ -41,13 +41,13 @@ export async function POST(req: NextRequest) {
     const host = sanitizeHostnameForFilename(report.targetUrl);
     const filename = `webforall-accessibility-report-${host}.pdf`;
 
-    return new NextResponse(pdfBuffer, {
+    return new Response(uint8Array, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Disposition': `attachment; filename="${filename}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
         'Access-Control-Expose-Headers': 'Content-Disposition',
-        'Content-Length': pdfBuffer.length.toString(),
+        'Content-Length': uint8Array.byteLength.toString(),
         'Cache-Control': 'no-store, no-cache, must-revalidate',
       },
     });

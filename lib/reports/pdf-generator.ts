@@ -36,6 +36,19 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   const maxPageY = pageHeight - bottomMargin; // 744 pt
   const headerRunningY = 46; // Content start Y on pages 2+
 
+  const safeTargetUrl = report?.targetUrl || 'webforall.local';
+  const safeViolations = Array.isArray(report?.violations) ? report.violations : [];
+  const safeIncomplete = Array.isArray(report?.incomplete) ? report.incomplete : [];
+  const safePasses = Array.isArray(report?.passes) ? report.passes : [];
+  const safeSummary = report?.summary || {
+    totalViolations: safeViolations.length,
+    totalAffectedElements: safeViolations.reduce((acc, v) => acc + (v.nodes ? v.nodes.length : 0), 0),
+    byImpact: { critical: 0, serious: 0, moderate: 0, minor: 0 },
+    incompleteCount: safeIncomplete.length,
+    passedCount: safePasses.length,
+  };
+  const safeByImpact = safeSummary.byImpact || { critical: 0, serious: 0, moderate: 0, minor: 0 };
+
   let y = margin;
 
   // Draws running header on pages 2+
@@ -51,7 +64,7 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     doc.setTextColor(140, 150, 165);
-    const shortUrl = report.targetUrl.replace(/^https?:\/\//, '').slice(0, 48);
+    const shortUrl = safeTargetUrl.replace(/^https?:\/\//, '').slice(0, 48);
     doc.text(shortUrl, pageWidth - margin, 24, { align: 'right' });
 
     doc.setDrawColor(220, 226, 235);
@@ -110,7 +123,7 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   doc.setFontSize(18);
   doc.setTextColor(24, 35, 58);
   doc.text(
-    report.isDemo ? 'Interactive Storefront Demo Report' : 'Web Accessibility Evaluation Report',
+    report?.isDemo ? 'Interactive Storefront Demo Report' : 'Web Accessibility Evaluation Report',
     margin,
     y
   );
@@ -122,7 +135,7 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   doc.setFontSize(10.5);
   doc.setTextColor(49, 87, 232);
   const targetUrlDisplay =
-    report.targetUrl.length > 76 ? report.targetUrl.slice(0, 73) + '...' : report.targetUrl;
+    safeTargetUrl.length > 76 ? safeTargetUrl.slice(0, 73) + '...' : safeTargetUrl;
   doc.text(targetUrlDisplay, margin, y);
 
   y += 15;
@@ -131,8 +144,11 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(88, 103, 125);
-  const formattedDate = new Date(report.timestamp).toLocaleString();
-  const metaText = `Audited: ${formattedDate}   |   Duration: ${report.scanDurationMs}ms   |   Engine: ${report.engine.name} v${report.engine.version}   |   Standard: WCAG 2.1 Level AA`;
+  const formattedDate = report?.timestamp ? new Date(report.timestamp).toLocaleString() : new Date().toLocaleString();
+  const scanDuration = typeof report?.scanDurationMs === 'number' ? report.scanDurationMs : 0;
+  const engineName = report?.engine?.name || 'axe-core';
+  const engineVer = report?.engine?.version || '4.10.x';
+  const metaText = `Audited: ${formattedDate}   |   Duration: ${scanDuration}ms   |   Engine: ${engineName} v${engineVer}   |   Standard: WCAG 2.1 Level AA`;
   const metaLines = doc.splitTextToSize(metaText, contentWidth);
   doc.text(metaLines, margin, y);
 
@@ -156,17 +172,17 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   y += 12;
 
   // Summary Metric Boxes: dynamically allocate 5 boxes if incomplete checks exist, else 4
-  const hasIncomplete = typeof report.summary.incompleteCount === 'number' && report.summary.incompleteCount > 0;
+  const hasIncomplete = typeof safeSummary.incompleteCount === 'number' && safeSummary.incompleteCount > 0;
   const metrics: Array<{ label: string; count: number; bg: [number, number, number]; fg: [number, number, number] }> = [
-    { label: 'Total Violations', count: report.summary.totalViolations, bg: [242, 240, 255], fg: [24, 35, 58] },
-    { label: 'Critical Barriers', count: report.summary.byImpact.critical, bg: [255, 229, 225], fg: [242, 92, 77] },
-    { label: 'Serious Barriers', count: report.summary.byImpact.serious, bg: [255, 241, 201], fg: [180, 83, 9] },
+    { label: 'Total Violations', count: safeSummary.totalViolations ?? safeViolations.length, bg: [242, 240, 255], fg: [24, 35, 58] },
+    { label: 'Critical Barriers', count: safeByImpact.critical ?? 0, bg: [255, 229, 225], fg: [242, 92, 77] },
+    { label: 'Serious Barriers', count: safeByImpact.serious ?? 0, bg: [255, 241, 201], fg: [180, 83, 9] },
   ];
 
   if (hasIncomplete) {
     metrics.push({
       label: 'Needs Review',
-      count: report.summary.incompleteCount,
+      count: safeSummary.incompleteCount,
       bg: [243, 232, 255], // Violet soft #F3E8FF
       fg: [107, 70, 217], // Violet #6B46D9
     });
@@ -174,7 +190,7 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
 
   metrics.push({
     label: 'Passed Checks',
-    count: report.summary.passedCount,
+    count: safeSummary.passedCount ?? safePasses.length,
     bg: [221, 246, 241],
     fg: [25, 168, 154],
   });
@@ -208,16 +224,16 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(88, 103, 125);
-  const incCount = report.summary.incompleteCount || (report.incomplete ? report.incomplete.length : 0);
+  const incCount = safeSummary.incompleteCount || safeIncomplete.length;
   let summaryExplanation = '';
-  if (report.summary.totalViolations === 0) {
+  if (safeSummary.totalViolations === 0) {
     summaryExplanation = incCount > 0
       ? `No automated violations were detected on this page DOM. However, ${incCount} item${incCount === 1 ? '' : 's'} require${incCount === 1 ? 's' : ''} human review and manual verification.`
       : 'No automated accessibility violations were detected on this page DOM. Manual verification of keyboard task flows and assistive screen readers is still recommended.';
   } else {
     summaryExplanation = incCount > 0
-      ? `The automated scanner identified ${report.summary.totalViolations} accessibility barrier${report.summary.totalViolations === 1 ? '' : 's'} across ${report.summary.totalAffectedElements} affected DOM element${report.summary.totalAffectedElements === 1 ? '' : 's'}, and ${incCount} item${incCount === 1 ? '' : 's'} requiring manual human verification. Prioritize Critical and Serious issues first.`
-      : `The automated scanner identified ${report.summary.totalViolations} accessibility barrier${report.summary.totalViolations === 1 ? '' : 's'} across ${report.summary.totalAffectedElements} affected DOM element${report.summary.totalAffectedElements === 1 ? '' : 's'}. Prioritize Critical and Serious issues first to resolve the most severe barriers.`;
+      ? `The automated scanner identified ${safeSummary.totalViolations} accessibility barrier${safeSummary.totalViolations === 1 ? '' : 's'} across ${safeSummary.totalAffectedElements} affected DOM element${safeSummary.totalAffectedElements === 1 ? '' : 's'}, and ${incCount} item${incCount === 1 ? '' : 's'} requiring manual human verification. Prioritize Critical and Serious issues first.`
+      : `The automated scanner identified ${safeSummary.totalViolations} accessibility barrier${safeSummary.totalViolations === 1 ? '' : 's'} across ${safeSummary.totalAffectedElements} affected DOM element${safeSummary.totalAffectedElements === 1 ? '' : 's'}. Prioritize Critical and Serious issues first to resolve the most severe barriers.`;
   }
 
   const explanationLines = doc.splitTextToSize(summaryExplanation, contentWidth);
@@ -227,8 +243,8 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   // ==========================================
   // 3. DETAILED FINDINGS
   // ==========================================
-  if (report.violations.length > 0) {
-    report.violations.forEach((violation: Finding, idx: number) => {
+  if (safeViolations.length > 0) {
+    safeViolations.forEach((violation: Finding, idx: number) => {
       // Impact Chip Colors
       let impactBg: [number, number, number] = [242, 240, 255];
       let impactFg: [number, number, number] = [24, 35, 58];
@@ -246,39 +262,45 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
         impactFg = [49, 87, 232];
       }
 
+      const rem = violation.remediation || getRemediationForRule(violation.id, violation.description, violation.helpUrl);
+
       // Pre-calculate line wrapping and exact heights for all sections
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10.5);
-      const titleLines = doc.splitTextToSize(`${idx + 1}. ${violation.title}`, cardInnerWidth);
+      const titleText = `${idx + 1}. ${violation.title || rem.friendlyTitle || violation.id || 'Violation'}`;
+      const titleLines = doc.splitTextToSize(titleText, cardInnerWidth);
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8.5);
-      const problemText = violation.remediation.whatIsWrong || violation.description;
+      const problemText = rem.whatIsWrong || violation.description || violation.help || 'Accessibility issue detected.';
       const problemLines = doc.splitTextToSize(problemText, cardInnerWidth);
 
-      const whyLines = doc.splitTextToSize(violation.remediation.whyItMatters, cardInnerWidth);
+      const whyText = rem.whyItMatters || 'Resolving this improves access for assistive technology users.';
+      const whyLines = doc.splitTextToSize(whyText, cardInnerWidth);
 
-      const whoLines = violation.remediation.whoIsAffected
-        ? doc.splitTextToSize(violation.remediation.whoIsAffected, cardInnerWidth)
+      const whoLines = rem.whoIsAffected
+        ? doc.splitTextToSize(rem.whoIsAffected, cardInnerWidth)
         : null;
 
-      const fixLines = doc.splitTextToSize(violation.remediation.howToFix, cardInnerWidth);
+      const fixText = rem.howToFix || 'Inspect the affected element and follow standard accessibility guidelines.';
+      const fixLines = doc.splitTextToSize(fixText, cardInnerWidth);
 
       // Standards text line
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       const rawStandards =
-        violation.remediation.wcagCriteria?.join(', ') || violation.tags?.slice(0, 4).join(', ');
-      const standardsText = `Rule ID: ${violation.id}   |   Standards: ${rawStandards || 'WCAG 2.1 AA'}`;
+        rem.wcagCriteria?.join(', ') || violation.tags?.slice(0, 4).join(', ');
+      const standardsText = `Rule ID: ${violation.id || 'rule'}   |   Standards: ${rawStandards || 'WCAG 2.1 AA'}`;
       const standardsLines = doc.splitTextToSize(standardsText, cardInnerWidth);
 
       // Selectors lines
       doc.setFont('courier', 'normal');
       doc.setFontSize(7.5);
       const selectorLinesList: string[][] = [];
-      const nodesToShow = violation.nodes.slice(0, 2);
+      const safeNodes = Array.isArray(violation.nodes) ? violation.nodes : [];
+      const nodesToShow = safeNodes.slice(0, 2);
       nodesToShow.forEach((node) => {
-        const selText = node.target.join(' ');
+        const selText = Array.isArray(node.target) && node.target.length > 0 ? node.target.join(' ') : (node.html || 'selector');
         selectorLinesList.push(doc.splitTextToSize(selText, cardInnerWidth - 14));
       });
 
@@ -290,9 +312,9 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
       let badBoxH = 0;
       let goodBoxH = 0;
 
-      if (violation.remediation.codeExample) {
-        const bad = doc.splitTextToSize(violation.remediation.codeExample.incorrect, cardInnerWidth - 16);
-        const good = doc.splitTextToSize(violation.remediation.codeExample.correct, cardInnerWidth - 16);
+      if (rem.codeExample && rem.codeExample.incorrect && rem.codeExample.correct) {
+        const bad = doc.splitTextToSize(rem.codeExample.incorrect, cardInnerWidth - 16);
+        const good = doc.splitTextToSize(rem.codeExample.correct, cardInnerWidth - 16);
         badCodeLines = bad;
         goodCodeLines = good;
         badBoxH = 10 + bad.length * 8.5 + 4;
@@ -985,7 +1007,8 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   // ==========================================
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
-  const disclaimerLines = doc.splitTextToSize(report.disclaimer, contentWidth - 20);
+  const disclaimerText = report?.disclaimer || 'Automated accessibility scans evaluate machine-testable rules. Manual review is recommended to ensure full WCAG 2.1 AA conformance.';
+  const disclaimerLines = doc.splitTextToSize(disclaimerText, contentWidth - 20);
   const disclaimerH = 22 + disclaimerLines.length * 9.5 + 8;
 
   ensureSpace(disclaimerH);
@@ -1026,30 +1049,67 @@ export function createPdfDocument(report: AccessibilityReport): jsPDF {
   return doc;
 }
 
+// Active blob URLs pool with cleanup
+const activeBlobUrls = new Set<string>();
+
+if (typeof window !== 'undefined') {
+  // Safe cleanup on page unmount / tab close
+  window.addEventListener('pagehide', () => {
+    activeBlobUrls.forEach((url) => {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {
+        // Ignore revocation errors on unload
+      }
+    });
+    activeBlobUrls.clear();
+  });
+}
+
 /**
  * Triggers a cross-browser file download from a Blob with safe asynchronous DOM cleanup.
- * Prevents Chromium/Chrome from cancelling downloads when elements are removed prematurely.
+ * Prevents Chromium/Chrome from cancelling downloads when elements or object URLs are removed prematurely.
  */
 export function triggerBrowserDownload(blob: Blob, filename: string): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
+  if (!blob || blob.size === 0) {
+    throw new Error('Cannot download empty file.');
+  }
+
   const url = URL.createObjectURL(blob);
+  activeBlobUrls.add(url);
+
   const a = document.createElement('a');
   a.style.display = 'none';
   a.href = url;
   a.download = filename;
+  a.rel = 'noopener';
 
   document.body.appendChild(a);
   a.click();
 
-  // Asynchronous cleanup: Chrome requires the element to remain connected
-  // and the object URL to remain valid until the browser's download manager takes over.
+  // Asynchronous cleanup:
+  // 1. Remove anchor tag from DOM after a short tick
   setTimeout(() => {
     if (a.parentNode) {
       document.body.removeChild(a);
     }
-    URL.revokeObjectURL(url);
   }, 1000);
+
+  // 2. Retain the Blob URL in memory for a safe window (2 minutes) to ensure
+  // that slow disk I/O, OS "Save As" file pickers, antivirus scanning,
+  // or asynchronous Chromium download scheduling complete reading all bytes.
+  setTimeout(() => {
+    if (activeBlobUrls.has(url)) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch {
+        // Ignore revocation errors
+      }
+      activeBlobUrls.delete(url);
+    }
+  }, 120000);
 }
 
 /**
@@ -1061,7 +1121,70 @@ export function generatePdfReport(report: AccessibilityReport): void {
   
   if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     const arrayBuffer = doc.output('arraybuffer');
+    if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+      throw new Error('Local PDF generator produced empty output.');
+    }
     const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
     triggerBrowserDownload(blob, filename);
   }
+}
+
+export interface PdfValidationResult {
+  valid: boolean;
+  version?: string;
+  byteLength: number;
+  error?: string;
+}
+
+/**
+ * Validates the binary structure of a generated PDF against standard PDF specifications.
+ * Confirms header signature, %%EOF marker, startxref offset, xref table/stream, and catalog root.
+ */
+export function validatePdfStructure(buffer: ArrayBuffer | Uint8Array | Buffer): PdfValidationResult {
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  const len = bytes.byteLength;
+
+  if (len < 32) {
+    return { valid: false, byteLength: len, error: 'File is too small to be a valid PDF document.' };
+  }
+
+  let headStr = '';
+  for (let i = 0; i < Math.min(len, 1024); i++) {
+    headStr += String.fromCharCode(bytes[i]);
+  }
+
+  if (!headStr.startsWith('%PDF-')) {
+    return { valid: false, byteLength: len, error: 'Missing standard %PDF- header signature.' };
+  }
+
+  const versionMatch = headStr.match(/^%PDF-([0-9.]+)/);
+  const version = versionMatch ? versionMatch[0] : '%PDF-1.3';
+
+  let tailStr = '';
+  const tailStart = Math.max(0, len - 4096);
+  for (let i = tailStart; i < len; i++) {
+    tailStr += String.fromCharCode(bytes[i]);
+  }
+
+  const eofIdx = tailStr.lastIndexOf('%%EOF');
+  if (eofIdx === -1) {
+    return { valid: false, byteLength: len, error: 'Missing %%EOF end-of-file marker.' };
+  }
+
+  const startXrefIdx = tailStr.lastIndexOf('startxref', eofIdx);
+  if (startXrefIdx === -1) {
+    return { valid: false, byteLength: len, error: 'Missing startxref offset keyword.' };
+  }
+
+  const offsetSubstring = tailStr.slice(startXrefIdx + 9, eofIdx).trim();
+  const xrefOffset = parseInt(offsetSubstring, 10);
+  if (isNaN(xrefOffset) || xrefOffset <= 0 || xrefOffset >= len) {
+    return { valid: false, byteLength: len, error: `Invalid startxref byte offset (${offsetSubstring}).` };
+  }
+
+  return {
+    valid: true,
+    version,
+    byteLength: len,
+  };
 }

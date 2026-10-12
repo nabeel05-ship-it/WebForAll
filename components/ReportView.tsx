@@ -123,6 +123,10 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
       setIsGeneratingPdf(true);
       setPdfError(null);
 
+      if (!report || !report.targetUrl) {
+        throw new Error('Cannot export PDF: No valid accessibility report available.');
+      }
+
       // Attempt server-side PDF generation with genuine Content-Type & Content-Disposition headers
       const res = await fetch('/api/report/pdf', {
         method: 'POST',
@@ -140,6 +144,13 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
         } catch {
           // Ignore JSON parsing failure
         }
+
+        // If the request was rejected due to client error (4xx), do not attempt client-side fallback
+        if (res.status >= 400 && res.status < 500) {
+          setPdfError(errorMsg);
+          return;
+        }
+
         throw new Error(errorMsg);
       }
 
@@ -152,15 +163,25 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
       let filename = `webforall-accessibility-report-${sanitizeHostnameForFilename(report.targetUrl)}.pdf`;
       const disposition = res.headers.get('content-disposition');
       if (disposition) {
-        const match = disposition.match(/filename=["']?([^"';]+)["']?/i);
-        if (match && match[1]) {
-          filename = match[1].trim();
+        const matchUtf8 = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+        const matchRegular = disposition.match(/filename=["']?([^"';]+)["']?/i);
+        if (matchUtf8 && matchUtf8[1]) {
+          filename = decodeURIComponent(matchUtf8[1].trim());
+        } else if (matchRegular && matchRegular[1]) {
+          filename = matchRegular[1].trim();
         }
       }
 
       const arrayBuffer = await res.arrayBuffer();
       if (!arrayBuffer || arrayBuffer.byteLength === 0) {
         throw new Error('Received empty PDF document.');
+      }
+
+      // Verify PDF header magic bytes before creating blob
+      const headerBytes = new Uint8Array(arrayBuffer.slice(0, 5));
+      const headerString = String.fromCharCode(...headerBytes);
+      if (headerString !== '%PDF-') {
+        throw new Error('Downloaded file has corrupted PDF header.');
       }
 
       // Explicitly construct application/pdf Blob and trigger cross-browser download
