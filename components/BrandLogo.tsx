@@ -57,7 +57,7 @@ export default function BrandLogo({
           width={effectiveIconSize}
           height={effectiveIconSize}
           priority={priority}
-          className="rounded-full shadow-subtle object-contain overflow-hidden"
+          className="object-contain"
           style={{ width: `${effectiveIconSize}px`, height: `${effectiveIconSize}px` }}
         />
       </div>
@@ -68,7 +68,7 @@ export default function BrandLogo({
 
   return (
     <div className={`inline-flex items-center gap-2.5 sm:gap-3 flex-shrink-0 ${className}`}>
-      {/* Icon-Only Logo Graphic */}
+      {/* Icon-Only Official Brand Logo Graphic */}
       <div className="relative inline-flex items-center justify-center flex-shrink-0">
         <Image
           src="/brand/webforall-icon.png"
@@ -77,7 +77,7 @@ export default function BrandLogo({
           width={effectiveIconSize}
           height={effectiveIconSize}
           priority={priority}
-          className="rounded-full shadow-subtle object-contain overflow-hidden"
+          className="object-contain"
           style={{ width: `${effectiveIconSize}px`, height: `${effectiveIconSize}px` }}
         />
       </div>

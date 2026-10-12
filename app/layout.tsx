@@ -39,8 +39,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: '/brand/webforall-full-logo.png',
-        width: 1024,
-        height: 512,
+        width: 1200,
+        height: 630,
         alt: 'WebForAll — A More Accessible Web for Everyone',
       },
     ],
