@@ -20,7 +20,7 @@ export default function InteractiveA11yLab() {
   const [activeTab, setActiveTab] = useState<'name' | 'contrast'>('name');
 
   // Accessible Name Lab State
-  const [buttonType, setButtonType] = useState<'icon-only' | 'aria-label' | 'visible-text'>('aria-label');
+  const [buttonType, setButtonType] = useState<'icon-only' | 'aria-label' | 'visible-text' | 'sr-only'>('aria-label');
   const [customLabel, setCustomLabel] = useState('Submit registration form');
 
   // Contrast Lab State
@@ -57,9 +57,11 @@ export default function InteractiveA11yLab() {
         </div>
 
         {/* Tab switchers */}
-        <div className="flex items-center gap-2 bg-canvas p-1 rounded-xl border border-border-ink text-xs font-bold">
+        <div className="flex items-center gap-2 bg-canvas p-1 rounded-xl border border-border-ink text-xs font-bold" role="tablist" aria-label="Interactive Lab Modules">
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'name'}
             onClick={() => setActiveTab('name')}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeTab === 'name' ? 'bg-electric text-white shadow-subtle' : 'text-ink-muted hover:text-ink'
@@ -69,6 +71,8 @@ export default function InteractiveA11yLab() {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={activeTab === 'contrast'}
             onClick={() => setActiveTab('contrast')}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeTab === 'contrast' ? 'bg-electric text-white shadow-subtle' : 'text-ink-muted hover:text-ink'
@@ -83,7 +87,7 @@ export default function InteractiveA11yLab() {
       {activeTab === 'name' && (
         <div className="space-y-6">
           <p className="text-sm text-ink-muted leading-relaxed font-medium">
-            Test how screen readers (VoiceOver, NVDA, JAWS) announce buttons based on their HTML markup.
+            Test how screen readers (VoiceOver, NVDA, JAWS) announce interactive buttons based on their HTML markup.
           </p>
 
           {/* Mode Selector */}
@@ -97,7 +101,7 @@ export default function InteractiveA11yLab() {
                   : 'border-border-ink bg-canvas text-ink-muted hover:text-ink'
               }`}
             >
-              1. Icon-Only (Unlabelled Flaw)
+              1. Icon-Only (Unlabelled Barrier)
             </button>
             <button
               type="button"
@@ -112,6 +116,17 @@ export default function InteractiveA11yLab() {
             </button>
             <button
               type="button"
+              onClick={() => setButtonType('sr-only')}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold border-2 transition-all cursor-pointer ${
+                buttonType === 'sr-only'
+                  ? 'border-violet bg-violet-soft text-violet shadow-subtle'
+                  : 'border-border-ink bg-canvas text-ink-muted hover:text-ink'
+              }`}
+            >
+              3. Visually Hidden (.sr-only)
+            </button>
+            <button
+              type="button"
               onClick={() => setButtonType('visible-text')}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold border-2 transition-all cursor-pointer ${
                 buttonType === 'visible-text'
@@ -119,7 +134,7 @@ export default function InteractiveA11yLab() {
                   : 'border-border-ink bg-canvas text-ink-muted hover:text-ink'
               }`}
             >
-              3. Visible Text Button (Best Practice)
+              4. Visible Text (Best Practice)
             </button>
           </div>
 
@@ -146,6 +161,14 @@ export default function InteractiveA11yLab() {
                     className="p-3 bg-teal text-white rounded-xl shadow-subtle cursor-pointer focus:outline-none focus:ring-4 focus:ring-teal/20 flex items-center gap-2"
                   >
                     <MousePointer className="w-5 h-5" />
+                  </button>
+                )}
+                {buttonType === 'sr-only' && (
+                  <button
+                    type="button"
+                    className="p-3 bg-violet text-white rounded-xl shadow-subtle cursor-pointer focus:outline-none focus:ring-4 focus:ring-violet/20 flex items-center gap-2"
+                  >
+                    <MousePointer className="w-5 h-5" />
                     <span className="sr-only">{customLabel}</span>
                   </button>
                 )}
@@ -163,7 +186,7 @@ export default function InteractiveA11yLab() {
               {buttonType !== 'icon-only' && (
                 <div className="space-y-1">
                   <label htmlFor="custom-label-input" className="text-[11px] font-bold text-ink-muted block">
-                    Edit Accessible Name:
+                    Edit Accessible Name Text:
                   </label>
                   <input
                     id="custom-label-input"
@@ -174,39 +197,59 @@ export default function InteractiveA11yLab() {
                   />
                 </div>
               )}
+
+              {/* Code Preview */}
+              <div className="pt-2 border-t border-border-subtle">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted block mb-1">
+                  Generated HTML:
+                </span>
+                <pre className="text-[11px] font-mono bg-surface p-2.5 rounded-lg border border-border-ink text-ink overflow-x-auto">
+                  <code>
+                    {buttonType === 'icon-only' && '<button class="btn">\n  <svg ...></svg>\n</button>'}
+                    {buttonType === 'aria-label' && `<button aria-label="${customLabel}">\n  <svg aria-hidden="true" ...></svg>\n</button>`}
+                    {buttonType === 'sr-only' && `<button class="btn">\n  <svg aria-hidden="true" ...></svg>\n  <span class="sr-only">${customLabel}</span>\n</button>`}
+                    {buttonType === 'visible-text' && `<button class="btn">\n  <svg aria-hidden="true" ...></svg>\n  <span>${customLabel}</span>\n</button>`}
+                  </code>
+                </pre>
+              </div>
             </div>
 
             {/* Screen Reader Voiceover Box */}
-            <div className="p-5 rounded-xl bg-ink text-white space-y-3 shadow-card">
-              <div className="flex items-center justify-between text-xs font-bold text-white/70">
-                <span className="flex items-center gap-1.5">
-                  {buttonType === 'icon-only' ? (
-                    <VolumeX className="w-4 h-4 text-coral" />
-                  ) : (
-                    <Volume2 className="w-4 h-4 text-teal animate-pulse" />
-                  )}
-                  <span>Simulated Screen Reader Announcement</span>
-                </span>
-                <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-white/10">VoiceOver</span>
+            <div className="p-5 rounded-xl bg-ink text-white space-y-3 shadow-card flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-xs font-bold text-white/70">
+                  <span className="flex items-center gap-1.5">
+                    {buttonType === 'icon-only' ? (
+                      <VolumeX className="w-4 h-4 text-coral" />
+                    ) : (
+                      <Volume2 className="w-4 h-4 text-teal animate-pulse" />
+                    )}
+                    <span>Simulated Screen Reader Speech Synthesizer</span>
+                  </span>
+                  <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-white/10">VoiceOver</span>
+                </div>
+
+                <div className="p-4 rounded-lg bg-white/10 border border-white/15 min-h-[72px] flex items-center">
+                  <p className="font-mono text-sm leading-relaxed">
+                    {buttonType === 'icon-only' && (
+                      <span className="text-coral font-bold">&quot;button&quot; (No accessible name computed)</span>
+                    )}
+                    {buttonType === 'aria-label' && (
+                      <span className="text-teal font-bold">&quot;{customLabel}, button&quot;</span>
+                    )}
+                    {buttonType === 'sr-only' && (
+                      <span className="text-violet-soft font-bold">&quot;{customLabel}, button&quot;</span>
+                    )}
+                    {buttonType === 'visible-text' && (
+                      <span className="text-teal-soft font-bold">&quot;{customLabel}, button&quot;</span>
+                    )}
+                  </p>
+                </div>
               </div>
 
-              <div className="p-4 rounded-lg bg-white/10 border border-white/15 min-h-[72px] flex items-center">
-                <p className="font-mono text-sm leading-relaxed">
-                  {buttonType === 'icon-only' && (
-                    <span className="text-coral font-bold">&quot;button&quot; (No purpose announced)</span>
-                  )}
-                  {buttonType === 'aria-label' && (
-                    <span className="text-teal font-bold">&quot;{customLabel}, button&quot;</span>
-                  )}
-                  {buttonType === 'visible-text' && (
-                    <span className="text-teal-soft font-bold">&quot;{customLabel}, button&quot;</span>
-                  )}
-                </p>
-              </div>
-
-              <p className="text-[11px] text-white/70 leading-relaxed font-sans">
+              <p className="text-[11px] text-white/70 leading-relaxed font-sans pt-2 border-t border-white/10">
                 {buttonType === 'icon-only'
-                  ? 'Screen reader users cannot tell what this button does. Critical barrier for digital inclusion.'
+                  ? 'Screen reader users hear only a generic button sound without any explanation of what action it performs.'
                   : 'Clear, predictable accessible name announced. Speech-recognition users can also target this element by voice.'}
               </p>
             </div>
@@ -298,37 +341,55 @@ export default function InteractiveA11yLab() {
               </div>
 
               {/* Verdict Badges */}
-              <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold">
-                <div
-                  className={`p-2 rounded-lg border ${
-                    passesAA
-                      ? 'bg-teal-soft text-teal border-teal/30'
-                      : 'bg-coral-soft text-coral border-coral/30'
-                  }`}
-                >
-                  <span className="block text-[10px] uppercase font-mono">Normal Text</span>
-                  <span>{passesAA ? 'Pass (AA)' : 'Fail'}</span>
+              <div className="space-y-2.5">
+                <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold">
+                  <div
+                    className={`p-2 rounded-lg border ${
+                      passesAA
+                        ? 'bg-teal-soft text-teal border-teal/30'
+                        : 'bg-coral-soft text-coral border-coral/30'
+                    }`}
+                  >
+                    <span className="block text-[10px] uppercase font-mono">Normal Text</span>
+                    <span>{passesAA ? 'Pass (AA)' : 'Fail'}</span>
+                  </div>
+                  <div
+                    className={`p-2 rounded-lg border ${
+                      passesAALarge
+                        ? 'bg-teal-soft text-teal border-teal/30'
+                        : 'bg-coral-soft text-coral border-coral/30'
+                    }`}
+                  >
+                    <span className="block text-[10px] uppercase font-mono">Large (18pt+)</span>
+                    <span>{passesAALarge ? 'Pass (AA)' : 'Fail'}</span>
+                  </div>
+                  <div
+                    className={`p-2 rounded-lg border ${
+                      passesAAA
+                        ? 'bg-teal-soft text-teal border-teal/30'
+                        : 'bg-canvas text-ink-muted border-border-ink'
+                    }`}
+                  >
+                    <span className="block text-[10px] uppercase font-mono">Enhanced (7:1)</span>
+                    <span>{passesAAA ? 'Pass (AAA)' : 'Fail'}</span>
+                  </div>
                 </div>
-                <div
-                  className={`p-2 rounded-lg border ${
-                    passesAALarge
-                      ? 'bg-teal-soft text-teal border-teal/30'
-                      : 'bg-coral-soft text-coral border-coral/30'
-                  }`}
-                >
-                  <span className="block text-[10px] uppercase font-mono">Large (18pt+)</span>
-                  <span>{passesAALarge ? 'Pass (AA)' : 'Fail'}</span>
-                </div>
-                <div
-                  className={`p-2 rounded-lg border ${
-                    passesAAA
-                      ? 'bg-teal-soft text-teal border-teal/30'
-                      : 'bg-canvas text-ink-muted border-border-ink'
-                  }`}
-                >
-                  <span className="block text-[10px] uppercase font-mono">Enhanced (7:1)</span>
-                  <span>{passesAAA ? 'Pass (AAA)' : 'Fail'}</span>
-                </div>
+
+                {!passesAA && (
+                  <div className="p-2.5 rounded-lg bg-coral-soft/60 border border-coral/30 flex items-center justify-between gap-2 text-xs">
+                    <span className="text-coral font-bold flex items-center gap-1">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      Fails WCAG AA minimum
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setTextColor('#18233A')}
+                      className="px-2.5 py-1 bg-surface hover:bg-teal-soft text-teal font-bold rounded border border-teal/30 transition-colors cursor-pointer"
+                    >
+                      Auto-fix to ink #18233A &rarr;
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -44,6 +44,20 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
   const [copiedSelector, setCopiedSelector] = useState<string | null>(null);
+  const [copiedCodeId, setCopiedCodeId] = useState<string | null>(null);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcut '/' to focus search input
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const toggleFinding = (id: string) => {
     setExpandedFindings((prev) => ({
@@ -76,6 +90,16 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
       await navigator.clipboard.writeText(text);
       setCopiedSelector(id);
       setTimeout(() => setCopiedSelector(null), 2000);
+    } catch {
+      // Fallback
+    }
+  };
+
+  const copyCodeToClipboard = async (text: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedCodeId(id);
+      setTimeout(() => setCopiedCodeId(null), 2000);
     } catch {
       // Fallback
     }
@@ -561,19 +585,33 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
 
               <div className="relative w-full md:w-80">
                 <label htmlFor="search-findings" className="sr-only">
-                  Search findings by rule or selector
+                  Search findings by rule, title, or selector (Press / to focus)
                 </label>
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-ink-muted">
                   <Search className="w-4 h-4" aria-hidden="true" />
                 </div>
                 <input
+                  ref={searchInputRef}
                   id="search-findings"
                   type="text"
-                  placeholder="Search rule, title, selector..."
+                  placeholder="Search findings (Press /)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2 text-sm border border-border-ink rounded-lg bg-canvas text-ink focus:bg-surface focus:border-electric focus:ring-2 focus:ring-electric/20 focus:outline-none font-medium"
+                  className="w-full pl-9 pr-9 py-2 text-sm border border-border-ink rounded-lg bg-canvas text-ink focus:bg-surface focus:border-electric focus:ring-2 focus:ring-electric/20 focus:outline-none font-medium transition-all"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      searchInputRef.current?.focus();
+                    }}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-ink-muted hover:text-ink cursor-pointer"
+                    aria-label="Clear search input"
+                  >
+                    <span className="text-xs font-bold bg-canvas border border-border-ink rounded px-1.5 py-0.5">✕</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -906,13 +944,35 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
                                       </pre>
                                     </div>
 
-                                    <div className="p-4 bg-teal-soft rounded-xl border border-teal/30 space-y-2 shadow-subtle">
-                                      <span className="text-xs font-extrabold text-teal block uppercase tracking-wider">
-                                        Recommended Pattern
-                                      </span>
-                                      <pre className="text-xs text-ink font-mono bg-surface p-3 rounded-lg border border-teal/25 overflow-x-auto">
-                                        <code>{v.remediation.codeExample.correct}</code>
-                                      </pre>
+                                    <div className="p-4 bg-teal-soft rounded-xl border border-teal/30 space-y-2 shadow-subtle flex flex-col justify-between">
+                                      <div>
+                                        <div className="flex items-center justify-between mb-1.5">
+                                          <span className="text-xs font-extrabold text-teal block uppercase tracking-wider">
+                                            Recommended Pattern
+                                          </span>
+                                          <button
+                                            type="button"
+                                            onClick={() => copyCodeToClipboard(v.remediation.codeExample!.correct, `fix-${v.id}`)}
+                                            className="inline-flex items-center text-xs font-bold text-teal bg-surface px-2.5 py-1 rounded-md border border-teal/25 hover:bg-teal-soft transition-colors cursor-pointer"
+                                            title="Copy accessible code fix"
+                                          >
+                                            {copiedCodeId === `fix-${v.id}` ? (
+                                              <>
+                                                <Check className="w-3.5 h-3.5 mr-1" />
+                                                Copied!
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Copy className="w-3.5 h-3.5 mr-1" />
+                                                Copy Fix
+                                              </>
+                                            )}
+                                          </button>
+                                        </div>
+                                        <pre className="text-xs text-ink font-mono bg-surface p-3 rounded-lg border border-teal/25 overflow-x-auto">
+                                          <code>{v.remediation.codeExample.correct}</code>
+                                        </pre>
+                                      </div>
                                     </div>
                                   </div>
                                   <p className="text-xs text-ink-muted italic">

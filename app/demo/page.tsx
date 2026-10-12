@@ -42,6 +42,17 @@ export default function DemoPage() {
 
   // Remediation toggle: false = show barrier fixture, true = show accessible remedy
   const [isFixMode, setIsFixMode] = useState<boolean>(false);
+  const [copiedDemoCode, setCopiedDemoCode] = useState<boolean>(false);
+
+  const copyDemoCode = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedDemoCode(true);
+      setTimeout(() => setCopiedDemoCode(false), 2000);
+    } catch {
+      // Fallback
+    }
+  };
 
   const plantedFlaws = [
     {
@@ -592,13 +603,32 @@ export default function DemoPage() {
                   <div className="pt-2 space-y-2">
                     <div className="flex items-center justify-between text-xs font-bold text-ink-muted">
                       <span>{isFixMode ? 'Remediated Accessible Code:' : 'Problematic Fixture Code:'}</span>
-                      <button
-                        type="button"
-                        onClick={() => setIsFixMode(!isFixMode)}
-                        className="text-electric hover:underline text-xs"
-                      >
-                        {isFixMode ? 'Switch to Barrier' : 'Switch to Fix'}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => copyDemoCode(isFixMode ? currentFlaw.codeFix : currentFlaw.codeProblem)}
+                          className="text-xs text-ink bg-surface px-2 py-0.5 rounded border border-border-ink hover:text-electric transition-colors inline-flex items-center gap-1 font-sans cursor-pointer"
+                        >
+                          {copiedDemoCode ? (
+                            <>
+                              <Check className="w-3 h-3 text-teal" />
+                              <span className="text-teal font-bold">Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Code className="w-3 h-3" />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsFixMode(!isFixMode)}
+                          className="text-electric hover:underline text-xs cursor-pointer"
+                        >
+                          {isFixMode ? 'Switch to Barrier' : 'Switch to Fix'}
+                        </button>
+                      </div>
                     </div>
 
                     <pre className="font-mono text-[11px] p-3 rounded-xl bg-surface border border-border-ink overflow-x-auto text-ink">

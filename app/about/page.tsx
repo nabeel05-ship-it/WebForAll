@@ -49,6 +49,31 @@ export default function AboutPage() {
             When you enter a website URL, WebForAll validates the address, fetches the static HTML payload over a secure connection, builds an in-memory virtual DOM in a sandboxed headless environment (JSDOM), and evaluates axe-core rules against WCAG 2.1 Level A and AA standards.
           </p>
 
+          {/* Visual Technical Pipeline Flow Card */}
+          <div className="p-5 bg-surface rounded-2xl border-2 border-border-ink space-y-3 shadow-subtle">
+            <span className="text-xs font-mono font-extrabold text-electric uppercase tracking-wider block">
+              Ephemeral Scan Pipeline
+            </span>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs font-mono">
+              <div className="p-3 bg-canvas rounded-xl border border-border-ink space-y-1">
+                <span className="text-electric font-bold block">1. DNS & SSRF Filter</span>
+                <span className="text-[11px] text-ink-muted font-sans">Blocks private IPs & metadata</span>
+              </div>
+              <div className="p-3 bg-canvas rounded-xl border border-border-ink space-y-1">
+                <span className="text-golden font-bold block">2. Headless JSDOM</span>
+                <span className="text-[11px] text-ink-muted font-sans">Isolated DOM virtual tree</span>
+              </div>
+              <div className="p-3 bg-canvas rounded-xl border border-border-ink space-y-1">
+                <span className="text-teal font-bold block">3. axe-core 4.14</span>
+                <span className="text-[11px] text-ink-muted font-sans">WCAG 2.1 A/AA rule engine</span>
+              </div>
+              <div className="p-3 bg-canvas rounded-xl border border-border-ink space-y-1">
+                <span className="text-violet font-bold block">4. Ephemeral Output</span>
+                <span className="text-[11px] text-ink-muted font-sans">Volatile memory & client export</span>
+              </div>
+            </div>
+          </div>
+
           <details className="text-xs sm:text-sm text-ink-muted bg-surface border-2 border-border-ink rounded-2xl p-5 cursor-pointer shadow-subtle">
             <summary className="font-extrabold text-ink text-sm sm:text-base select-none flex items-center justify-between">
               <span>Technical pipeline details</span>
@@ -56,13 +81,13 @@ export default function AboutPage() {
             </summary>
             <div className="mt-3 pt-3 border-t border-border-subtle space-y-2 leading-relaxed">
               <p>
-                <strong>Evaluation Engine:</strong> Deque axe-core 4.10 executed within Node.js JSDOM 30.
+                <strong>Evaluation Engine:</strong> Deque axe-core 4.14 executed within Node.js JSDOM virtual DOM.
               </p>
               <p>
                 <strong>Execution Isolation:</strong> Client-side JavaScript from target websites is never executed on our servers to ensure complete sandboxing.
               </p>
               <p>
-                <strong>Resource Bounds:</strong> Requests enforce a strict 12-second abort timeout and a 5 MB payload streaming cap.
+                <strong>Resource Bounds:</strong> Requests enforce a strict 10-second connection timeout and a 5 MB payload streaming cap.
               </p>
             </div>
           </details>
@@ -70,25 +95,31 @@ export default function AboutPage() {
 
         {/* 3. Privacy and Data Handling */}
         <section className="space-y-4 pt-6 border-t border-border-ink" aria-labelledby="heading-privacy">
-          <h2 id="heading-privacy" className="text-2xl sm:text-3xl font-extrabold text-ink">
-            Privacy & Zero-Retention Policy
-          </h2>
+          <div className="flex items-center gap-2">
+            <Lock className="w-5 h-5 text-golden" />
+            <h2 id="heading-privacy" className="text-2xl sm:text-3xl font-extrabold text-ink">
+              Privacy & Zero-Retention Policy
+            </h2>
+          </div>
           <p className="text-base sm:text-lg text-ink-muted leading-relaxed font-medium">
             WebForAll is architected with privacy by design. We maintain no persistent databases (no PostgreSQL, MySQL, MongoDB, Firebase, or Supabase).
           </p>
-          <ul className="text-sm sm:text-base text-ink-muted space-y-2 list-disc pl-5 leading-relaxed font-medium" role="list">
+          <ul className="text-sm sm:text-base text-ink-muted space-y-2.5 list-disc pl-5 leading-relaxed font-medium" role="list">
             <li><strong className="text-ink">No user accounts:</strong> You never need to sign up, log in, or provide personal credentials.</li>
             <li><strong className="text-ink">No scan history stored:</strong> Evaluation reports exist only in ephemeral server memory during the active request and in your browser session.</li>
-            <li><strong className="text-ink">Local exports only:</strong> Report downloads (JSON and printable PDF) are assembled directly on your computer.</li>
+            <li><strong className="text-ink">Local exports only:</strong> Report downloads (JSON and printable PDF) are assembled directly on your computer or streamed over temporary HTTP attachment headers.</li>
             <li><strong className="text-ink">Zero third-party tracking:</strong> No advertising trackers, commercial cookies, or telemetry beacons.</li>
           </ul>
         </section>
 
         {/* 4. Security Protections */}
         <section className="space-y-4 pt-6 border-t border-border-ink" aria-labelledby="heading-security">
-          <h2 id="heading-security" className="text-2xl sm:text-3xl font-extrabold text-ink">
-            Security Engineering & SSRF Protection
-          </h2>
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-teal" />
+            <h2 id="heading-security" className="text-2xl sm:text-3xl font-extrabold text-ink">
+              Security Engineering & SSRF Protection
+            </h2>
+          </div>
           <p className="text-base sm:text-lg text-ink-muted leading-relaxed font-medium">
             Allowing a server to fetch public web pages requires rigorous Server-Side Request Forgery (SSRF) defenses to protect private network environments.
           </p>
@@ -117,13 +148,16 @@ export default function AboutPage() {
 
         {/* 5. Testing Limitations */}
         <section className="space-y-4 pt-6 border-t border-border-ink" aria-labelledby="heading-limitations">
-          <h2 id="heading-limitations" className="text-2xl sm:text-3xl font-extrabold text-ink">
-            Testing Scope & Limitations
-          </h2>
+          <div className="flex items-center gap-2">
+            <Terminal className="w-5 h-5 text-violet" />
+            <h2 id="heading-limitations" className="text-2xl sm:text-3xl font-extrabold text-ink">
+              Testing Scope & Limitations
+            </h2>
+          </div>
           <p className="text-base sm:text-lg text-ink-muted leading-relaxed font-medium">
             Automated tools are an essential first step for rapid discovery, but they cannot evaluate all aspects of digital inclusion:
           </p>
-          <ul className="text-sm sm:text-base text-ink-muted space-y-2 list-disc pl-5 leading-relaxed font-medium" role="list">
+          <ul className="text-sm sm:text-base text-ink-muted space-y-2.5 list-disc pl-5 leading-relaxed font-medium" role="list">
             <li>Automated testing evaluates approximately 30% to 50% of potential WCAG criteria.</li>
             <li>Whether alternative text is genuinely descriptive and contextually helpful requires human review.</li>
             <li>Client-side heavy single-page apps (SPAs) without SSR may evaluate only the initial HTML shell.</li>

@@ -11,6 +11,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://webforall-seven.vercel.app'),
   title: 'WebForAll — Web Accessibility Evaluation & Remediation',
   description:
     'Find accessibility barriers on your website, understand who is affected, and get practical developer guidance to fix them. Powered by axe-core in ephemeral memory.',

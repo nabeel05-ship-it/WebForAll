@@ -38,7 +38,18 @@ export default function HomePage() {
   const [activeCategory, setActiveCategory] = useState<string>('landmarks');
 
   // Before/After Showcase State
-  const [activeShowcase, setActiveShowcase] = useState<'image' | 'form' | 'button'>('button');
+  const [activeShowcase, setActiveShowcase] = useState<'image' | 'form' | 'button' | 'contrast' | 'heading'>('button');
+  const [copiedShowcase, setCopiedShowcase] = useState(false);
+
+  const copyShowcaseCode = async (codeStr: string) => {
+    try {
+      await navigator.clipboard.writeText(codeStr);
+      setCopiedShowcase(true);
+      setTimeout(() => setCopiedShowcase(false), 2000);
+    } catch {
+      // Ignore fallback
+    }
+  };
 
   const urlInputRef = useRef<HTMLInputElement>(null);
 
@@ -57,7 +68,7 @@ export default function HomePage() {
 
     try {
       setTimeout(() => {
-        setScanStepText('Constructing DOM & evaluating axe-core 4.10 rules...');
+        setScanStepText('Constructing DOM & evaluating axe-core 4.14 rules...');
       }, 750);
 
       const res = await fetch('/api/scan', {
@@ -197,152 +208,269 @@ export default function HomePage() {
         </div>
       ) : (
         <div>
-          {/* ============================================================ */}
-          {/* HERO SECTION — FOCUSED & REBALANCED SCANNER */}
-          {/* ============================================================ */}
-          <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 sm:pt-16 sm:pb-20 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-6"
-            >
-              <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-violet-soft border border-violet/30 text-violet text-xs font-extrabold uppercase tracking-wider">
-                <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Accessibility, made actionable</span>
-              </div>
+            {/* ============================================================ */}
+            {/* HERO SECTION — FOCUSED & REBALANCED SCANNER */}
+            {/* ============================================================ */}
+            <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 sm:pt-18 sm:pb-22 text-center relative">
+              {/* Background Glow Effect */}
+              <div
+                aria-hidden="true"
+                className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-electric/10 rounded-full blur-3xl pointer-events-none -z-10"
+              />
 
-              <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-extrabold tracking-tight text-ink leading-[1.08] max-w-3xl mx-auto">
-                Find the barriers standing between your site and its people.
-              </h1>
-
-              <p className="text-lg sm:text-xl text-ink-muted leading-relaxed max-w-2xl mx-auto font-medium">
-                Scan a public page, understand what needs attention, and get practical guidance your team can use right away.
-              </p>
-            </motion.div>
-
-            {/* PRIMARY SCANNER CARD */}
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.36, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-2xl mx-auto pt-8"
-            >
-              <form
-                id="scanner"
-                onSubmit={handleSubmit}
-                noValidate
-                className="bg-surface rounded-2xl border-2 border-border-ink p-5 sm:p-7 space-y-4 shadow-card text-left transition-shadow hover:shadow-elevated"
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
+                className="space-y-6"
               >
-                <label htmlFor="target-url" className="block text-sm font-bold text-ink">
-                  Enter any public website URL to scan
-                </label>
+                <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-violet-soft border border-violet/30 text-violet text-xs font-extrabold uppercase tracking-wider shadow-subtle">
+                  <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>Build a Web That Works for Everyone</span>
+                </div>
 
-                <div className="flex flex-col sm:flex-row gap-2.5">
-                  <div className="relative flex-grow">
-                    <input
-                      ref={urlInputRef}
-                      id="target-url"
-                      type="url"
-                      required
-                      disabled={isScanning}
-                      value={urlInput}
-                      onChange={(e) => {
-                        setUrlInput(e.target.value);
-                        if (scanError) setScanError(null);
-                      }}
-                      placeholder="https://example.com"
-                      className="w-full pl-4 pr-10 py-3.5 text-base text-ink bg-surface border-2 border-border-ink rounded-xl focus:border-electric focus:ring-4 focus:ring-electric/20 focus:outline-none disabled:bg-surface-subtle font-mono transition-all shadow-subtle"
-                      aria-invalid={!!scanError}
-                      aria-describedby={scanError ? 'scan-error-msg url-reassurance-hint' : 'url-reassurance-hint'}
-                    />
-                    {urlInput && !isScanning && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setUrlInput('');
-                          urlInputRef.current?.focus();
-                        }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-canvas transition-colors cursor-pointer"
-                        aria-label="Clear website address input"
-                      >
-                        <ClearIcon className="w-4 h-4" />
-                      </button>
-                    )}
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-ink leading-[1.08] max-w-4xl mx-auto">
+                  Find the barriers standing between your site and its people.
+                </h1>
+
+                <p className="text-lg sm:text-xl text-ink-muted leading-relaxed max-w-2xl mx-auto font-medium">
+                  Scan any public website for accessibility barriers, understand their real-world human impact, and discover practical code fixes with WebForAll.
+                </p>
+              </motion.div>
+
+              {/* PRIMARY SCANNER CARD */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.38, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+                className="max-w-2xl mx-auto pt-8"
+              >
+                <form
+                  id="scanner"
+                  onSubmit={handleSubmit}
+                  noValidate
+                  className="bg-surface rounded-2xl border-2 border-border-ink p-5 sm:p-7 space-y-4 shadow-card text-left transition-all hover:shadow-elevated hover:border-border-strong relative"
+                >
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="target-url" className="block text-sm font-bold text-ink">
+                      Enter any public website URL to scan
+                    </label>
+                    <span className="text-xs font-mono text-ink-muted hidden sm:inline-block">
+                      HTTP / HTTPS
+                    </span>
                   </div>
 
-                  <motion.button
-                    whileHover={{ scale: 1.015 }}
-                    whileTap={{ scale: 0.985 }}
-                    type="submit"
-                    disabled={isScanning}
-                    className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl font-extrabold text-base text-white bg-electric hover:bg-electric-hover active:bg-[#2244C9] disabled:bg-border-ink disabled:text-ink-muted transition-all shadow-electricGlow focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-electric/30 whitespace-nowrap cursor-pointer"
-                  >
-                    {isScanning ? (
-                      <>
-                        <RefreshCw className="w-5 h-5 mr-2 animate-spin" aria-hidden="true" />
-                        Evaluating site...
-                      </>
-                    ) : (
-                      <>
-                        Scan website
-                        <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
-                      </>
-                    )}
-                  </motion.button>
-                </div>
-
-                <div id="url-reassurance-hint" className="flex items-center justify-between text-xs sm:text-sm text-ink-muted pt-0.5">
-                  <span className="font-medium flex items-center gap-1.5">
-                    <Lock className="w-3.5 h-3.5 text-golden flex-shrink-0" aria-hidden="true" />
-                    No account required &bull; Evaluated in ephemeral memory
-                  </span>
-                </div>
-
-                {/* Status Announcements */}
-                <div aria-live="polite" role="status" className="min-h-[20px]">
-                  {isScanning && (
-                    <div className="inline-flex items-center gap-2 text-sm text-electric font-bold pt-1">
-                      <span className="w-2.5 h-2.5 rounded-full bg-electric animate-pulse" aria-hidden="true" />
-                      <span>{scanStepText}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Scan Error Banner */}
-                {scanError && (
-                  <div
-                    role="alert"
-                    className="p-4 rounded-xl bg-coral-soft border-2 border-coral/30 text-ink text-sm space-y-1.5 shadow-subtle"
-                  >
-                    <div className="flex items-center gap-2 font-extrabold text-coral">
-                      <AlertTriangle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-                      <span>Scan Request Unsuccessful</span>
-                      {scanError.code && (
-                        <span className="font-mono font-bold text-xs bg-surface text-coral px-2 py-0.5 rounded border border-coral/30">
-                          {scanError.code}
-                        </span>
+                  <div className="flex flex-col sm:flex-row gap-2.5">
+                    <div className="relative flex-grow">
+                      <input
+                        ref={urlInputRef}
+                        id="target-url"
+                        type="url"
+                        required
+                        disabled={isScanning}
+                        value={urlInput}
+                        onChange={(e) => {
+                          setUrlInput(e.target.value);
+                          if (scanError) setScanError(null);
+                        }}
+                        placeholder="https://example.com"
+                        className="w-full pl-4 pr-10 py-3.5 text-base text-ink bg-surface border-2 border-border-ink rounded-xl focus:border-electric focus:ring-4 focus:ring-electric/20 focus:outline-none disabled:bg-surface-subtle font-mono transition-all shadow-subtle"
+                        aria-invalid={!!scanError}
+                        aria-describedby={scanError ? 'scan-error-msg url-reassurance-hint' : 'url-reassurance-hint'}
+                      />
+                      {urlInput && !isScanning && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUrlInput('');
+                            urlInputRef.current?.focus();
+                          }}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-ink-muted hover:text-ink hover:bg-canvas transition-colors cursor-pointer"
+                          aria-label="Clear website address input"
+                        >
+                          <ClearIcon className="w-4 h-4" />
+                        </button>
                       )}
                     </div>
-                    <p id="scan-error-msg" className="text-ink-muted leading-relaxed font-medium">
-                      {scanError.message}
-                    </p>
-                  </div>
-                )}
-              </form>
 
-              {/* Secondary Action: Dedicated Demo Link */}
-              <div className="pt-6 flex items-center justify-center">
-                <Link
-                  href="/demo"
-                  className="inline-flex items-center text-sm font-bold text-ink hover:text-electric bg-surface hover:bg-cream px-5 py-3 rounded-xl border border-border-ink shadow-subtle transition-all"
-                >
-                  <Eye className="w-4 h-4 mr-2 text-violet" aria-hidden="true" />
-                  Try the interactive demo storefront &rarr;
-                </Link>
-              </div>
-            </motion.div>
-          </section>
+                    <motion.button
+                      whileHover={{ scale: 1.015, y: -1 }}
+                      whileTap={{ scale: 0.985, y: 0 }}
+                      type="submit"
+                      disabled={isScanning}
+                      className="inline-flex items-center justify-center px-7 py-3.5 rounded-xl font-extrabold text-base text-white bg-electric hover:bg-electric-hover active:bg-[#2244C9] disabled:bg-border-ink disabled:text-ink-muted transition-all shadow-electricGlow focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-electric/30 whitespace-nowrap cursor-pointer"
+                    >
+                      {isScanning ? (
+                        <>
+                          <RefreshCw className="w-5 h-5 mr-2 animate-spin" aria-hidden="true" />
+                          Evaluating site...
+                        </>
+                      ) : (
+                        <>
+                          Scan website
+                          <ArrowRight className="w-5 h-5 ml-2" aria-hidden="true" />
+                        </>
+                      )}
+                    </motion.button>
+                  </div>
+
+                  {/* Sample URL Presets for Instant Testing */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1 text-xs text-ink-muted font-medium">
+                    <span className="font-bold text-ink">Try sample:</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUrlInput('https://example.com');
+                        urlInputRef.current?.focus();
+                      }}
+                      className="px-2.5 py-1 rounded-md bg-canvas hover:bg-cream border border-border-ink text-ink font-mono hover:text-electric transition-colors cursor-pointer"
+                    >
+                      example.com
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUrlInput('https://w3.org');
+                        urlInputRef.current?.focus();
+                      }}
+                      className="px-2.5 py-1 rounded-md bg-canvas hover:bg-cream border border-border-ink text-ink font-mono hover:text-electric transition-colors cursor-pointer"
+                    >
+                      w3.org
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUrlInput('https://en.wikipedia.org');
+                        urlInputRef.current?.focus();
+                      }}
+                      className="px-2.5 py-1 rounded-md bg-canvas hover:bg-cream border border-border-ink text-ink font-mono hover:text-electric transition-colors cursor-pointer"
+                    >
+                      wikipedia.org
+                    </button>
+                  </div>
+
+                  <div id="url-reassurance-hint" className="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-ink-muted pt-1 gap-2">
+                    <span className="font-medium flex items-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-golden flex-shrink-0" aria-hidden="true" />
+                      No account required &bull; Evaluated in ephemeral memory
+                    </span>
+                    <span className="text-teal font-semibold flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-teal flex-shrink-0" aria-hidden="true" />
+                      SSRF Protected &bull; Zero DB retention
+                    </span>
+                  </div>
+
+                  {/* Status Announcements */}
+                  <div aria-live="polite" role="status" className="min-h-[20px]">
+                    {isScanning && (
+                      <div className="inline-flex items-center gap-2 text-sm text-electric font-bold pt-1">
+                        <span className="w-2.5 h-2.5 rounded-full bg-electric animate-pulse" aria-hidden="true" />
+                        <span>{scanStepText}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Scan Error Banner */}
+                  {scanError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      role="alert"
+                      className="p-4 rounded-xl bg-coral-soft border-2 border-coral/30 text-ink text-sm space-y-1.5 shadow-subtle"
+                    >
+                      <div className="flex items-center gap-2 font-extrabold text-coral">
+                        <AlertTriangle className="w-5 h-5 flex-shrink-0" aria-hidden="true" />
+                        <span>Scan Request Unsuccessful</span>
+                        {scanError.code && (
+                          <span className="font-mono font-bold text-xs bg-surface text-coral px-2 py-0.5 rounded border border-coral/30">
+                            {scanError.code}
+                          </span>
+                        )}
+                      </div>
+                      <p id="scan-error-msg" className="text-ink-muted leading-relaxed font-medium">
+                        {scanError.message}
+                      </p>
+                    </motion.div>
+                  )}
+                </form>
+
+                {/* Secondary Action: Dedicated Demo Link */}
+                <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+                  <Link
+                    href="/demo"
+                    className="inline-flex items-center text-sm font-bold text-ink hover:text-electric bg-surface hover:bg-cream px-5 py-3 rounded-xl border border-border-ink shadow-subtle transition-all"
+                  >
+                    <Eye className="w-4 h-4 mr-2 text-violet" aria-hidden="true" />
+                    Try the interactive demo storefront &rarr;
+                  </Link>
+                  <Link
+                    href="/guide"
+                    className="inline-flex items-center text-sm font-bold text-ink hover:text-electric bg-surface hover:bg-cream px-5 py-3 rounded-xl border border-border-ink shadow-subtle transition-all"
+                  >
+                    <Code2 className="w-4 h-4 mr-2 text-teal" aria-hidden="true" />
+                    Explore Accessibility Field Guide &rarr;
+                  </Link>
+                </div>
+              </motion.div>
+
+              {/* TECHNICAL SIGNAL INSPECTOR VISUALIZER (Hero Graphic) */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.42, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+                className="max-w-3xl mx-auto pt-10"
+              >
+                <div className="bg-surface rounded-2xl border-2 border-border-ink p-4 sm:p-6 shadow-card text-left space-y-4 relative overflow-hidden">
+                  {/* Window Title Bar */}
+                  <div className="flex items-center justify-between pb-3 border-b border-border-subtle">
+                    <div className="flex items-center gap-2">
+                      <span className="w-3 h-3 rounded-full bg-coral/80" />
+                      <span className="w-3 h-3 rounded-full bg-golden/80" />
+                      <span className="w-3 h-3 rounded-full bg-teal/80" />
+                      <span className="font-mono text-xs font-bold text-ink-muted ml-2">
+                        axe-core virtual inspection stream
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-teal-soft text-teal font-mono text-[11px] font-bold">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Engine Ready
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Visualizer Semantic DOM Stream */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
+                    <div className="p-3 bg-canvas rounded-xl border border-border-ink space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-ink-muted font-bold font-sans">01. Landmark Trees</span>
+                        <span className="text-[10px] text-teal font-bold bg-teal-soft px-1.5 py-0.5 rounded">Pass</span>
+                      </div>
+                      <code className="text-electric font-semibold block">&lt;main id=&quot;content&quot;&gt;</code>
+                      <p className="text-[11px] text-ink-muted font-sans font-medium">Valid top-level structure</p>
+                    </div>
+
+                    <div className="p-3 bg-canvas rounded-xl border border-border-ink space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-ink-muted font-bold font-sans">02. Accessible Names</span>
+                        <span className="text-[10px] text-coral font-bold bg-coral-soft px-1.5 py-0.5 rounded">Check</span>
+                      </div>
+                      <code className="text-coral font-semibold block">&lt;button aria-label=&quot;...&quot;&gt;</code>
+                      <p className="text-[11px] text-ink-muted font-sans font-medium">Ensures screen reader names</p>
+                    </div>
+
+                    <div className="p-3 bg-canvas rounded-xl border border-border-ink space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-ink-muted font-bold font-sans">03. Contrast Ratio</span>
+                        <span className="text-[10px] text-golden font-bold bg-golden-soft text-ink px-1.5 py-0.5 rounded">7.2 : 1</span>
+                      </div>
+                      <code className="text-violet font-semibold block">WCAG AA &bull; 4.5:1 min</code>
+                      <p className="text-[11px] text-ink-muted font-sans font-medium">High readability contrast</p>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </section>
 
           {/* ============================================================ */}
           {/* SECTION 1: WHAT WEBFORALL SEES (INTERACTIVE EXPLORER) */}
@@ -445,40 +573,32 @@ export default function HomePage() {
               </div>
 
               {/* Showcase Selector Pills */}
-              <div className="flex flex-wrap gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setActiveShowcase('button')}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-                    activeShowcase === 'button'
-                      ? 'bg-ink text-white shadow-subtle'
-                      : 'bg-surface text-ink-muted hover:text-ink border border-border-ink'
-                  }`}
-                >
-                  1. Icon-Only Buttons
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveShowcase('image')}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-                    activeShowcase === 'image'
-                      ? 'bg-ink text-white shadow-subtle'
-                      : 'bg-surface text-ink-muted hover:text-ink border border-border-ink'
-                  }`}
-                >
-                  2. Missing Image Alt
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveShowcase('form')}
-                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all cursor-pointer ${
-                    activeShowcase === 'form'
-                      ? 'bg-ink text-white shadow-subtle'
-                      : 'bg-surface text-ink-muted hover:text-ink border border-border-ink'
-                  }`}
-                >
-                  3. Unlabelled Inputs
-                </button>
+              <div className="flex flex-wrap gap-2.5" role="tablist" aria-label="Accessible Code Showcase">
+                {[
+                  { id: 'button', label: '1. Icon-Only Buttons' },
+                  { id: 'image', label: '2. Missing Image Alt' },
+                  { id: 'form', label: '3. Unlabelled Inputs' },
+                  { id: 'contrast', label: '4. Low Color Contrast' },
+                  { id: 'heading', label: '5. Skipped Headings' },
+                ].map((item) => {
+                  const isSelected = activeShowcase === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      onClick={() => setActiveShowcase(item.id as any)}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                        isSelected
+                          ? 'bg-ink text-white shadow-card scale-102'
+                          : 'bg-surface text-ink-muted hover:text-ink hover:bg-cream border border-border-ink'
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Side-by-Side Comparison Grid */}
@@ -492,28 +612,34 @@ export default function HomePage() {
                   className="grid grid-cols-1 lg:grid-cols-2 gap-6"
                 >
                   {/* LEFT: THE BARRIER */}
-                  <div className="bg-coral-soft rounded-2xl border-2 border-coral/30 p-6 sm:p-8 space-y-4 shadow-subtle">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-coral uppercase tracking-wider flex items-center gap-1.5">
-                        <AlertOctagon className="w-4 h-4" />
-                        What the scanner found
-                      </span>
-                      <span className="text-xs font-bold text-coral bg-surface px-2.5 py-0.5 rounded-full border border-coral/20">
-                        Barrier
-                      </span>
+                  <div className="bg-coral-soft rounded-2xl border-2 border-coral/30 p-6 sm:p-8 space-y-4 shadow-subtle flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-extrabold text-coral uppercase tracking-wider flex items-center gap-1.5">
+                          <AlertOctagon className="w-4 h-4" />
+                          What the scanner found
+                        </span>
+                        <span className="text-xs font-bold text-coral bg-surface px-2.5 py-0.5 rounded-full border border-coral/20">
+                          Barrier
+                        </span>
+                      </div>
+
+                      <h3 className="text-xl font-extrabold text-ink">
+                        {activeShowcase === 'button' && 'Cart button lacks accessible text'}
+                        {activeShowcase === 'image' && 'Product image missing alt description'}
+                        {activeShowcase === 'form' && 'Search input relies on placeholder only'}
+                        {activeShowcase === 'contrast' && 'Subtle gray text fails WCAG 4.5:1 ratio'}
+                        {activeShowcase === 'heading' && 'Heading jumps directly from <h1> to <h4>'}
+                      </h3>
+
+                      <p className="text-sm text-ink-muted leading-relaxed font-medium">
+                        {activeShowcase === 'button' && 'Screen reader users hear only "button" without learning what action it triggers.'}
+                        {activeShowcase === 'image' && 'Screen reader announces raw image file names like "hero_banner_v2.jpg" or "unlabelled graphic".'}
+                        {activeShowcase === 'form' && 'Placeholders vanish when typing begins and are frequently skipped by speech technology.'}
+                        {activeShowcase === 'contrast' && 'Low-vision readers or people using mobile devices under direct sunlight cannot read the text.'}
+                        {activeShowcase === 'heading' && 'Screen reader users skimming via heading navigation (H) assume intermediate sections were skipped.'}
+                      </p>
                     </div>
-
-                    <h3 className="text-xl font-extrabold text-ink">
-                      {activeShowcase === 'button' && 'Cart button lacks accessible text'}
-                      {activeShowcase === 'image' && 'Product image missing alt description'}
-                      {activeShowcase === 'form' && 'Search input relies on placeholder only'}
-                    </h3>
-
-                    <p className="text-sm text-ink-muted leading-relaxed font-medium">
-                      {activeShowcase === 'button' && 'Screen reader users hear only "button" without learning what action it triggers.'}
-                      {activeShowcase === 'image' && 'Screen reader announces raw image file names like "hero_banner_v2.jpg" or "unlabelled graphic".'}
-                      {activeShowcase === 'form' && 'Placeholders vanish when typing begins and are frequently skipped by speech technology.'}
-                    </p>
 
                     <div className="pt-2">
                       <span className="text-xs font-bold text-coral block mb-1.5 font-sans">
@@ -524,44 +650,81 @@ export default function HomePage() {
                           {activeShowcase === 'button' && '<button class="cart-btn">\n  <svg class="icon-cart"></svg>\n</button>'}
                           {activeShowcase === 'image' && '<img src="/assets/q3-growth.png">'}
                           {activeShowcase === 'form' && '<input type="email"\n  placeholder="Enter your email">'}
+                          {activeShowcase === 'contrast' && '/* Contrast: 2.1:1 (Fails AA) */\ncolor: #94A3B8; background: #FFFFFF;'}
+                          {activeShowcase === 'heading' && '<h1>Welcome to Storefront</h1>\n<!-- Missing <h2> and <h3> -->\n<h4 class="promo-banner">Clearance</h4>'}
                         </code>
                       </pre>
                     </div>
                   </div>
 
                   {/* RIGHT: THE REMEDY */}
-                  <div className="bg-teal-soft rounded-2xl border-2 border-teal/30 p-6 sm:p-8 space-y-4 shadow-subtle">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-teal uppercase tracking-wider flex items-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4" />
-                        Accessible Solution
-                      </span>
-                      <span className="text-xs font-bold text-teal bg-surface px-2.5 py-0.5 rounded-full border border-teal/20">
-                        Verified Fix
-                      </span>
+                  <div className="bg-teal-soft rounded-2xl border-2 border-teal/30 p-6 sm:p-8 space-y-4 shadow-subtle flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-extrabold text-teal uppercase tracking-wider flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4" />
+                          Accessible Solution
+                        </span>
+                        <span className="text-xs font-bold text-teal bg-surface px-2.5 py-0.5 rounded-full border border-teal/20">
+                          Verified Fix
+                        </span>
+                      </div>
+
+                      <h3 className="text-xl font-extrabold text-ink">
+                        {activeShowcase === 'button' && 'Add explicit aria-label or text'}
+                        {activeShowcase === 'image' && 'Provide descriptive alt text attribute'}
+                        {activeShowcase === 'form' && 'Pair with visible programmatic <label>'}
+                        {activeShowcase === 'contrast' && 'Increase foreground contrast to at least 4.5:1'}
+                        {activeShowcase === 'heading' && 'Maintain strict sequential heading hierarchy'}
+                      </h3>
+
+                      <p className="text-sm text-ink-muted leading-relaxed font-medium">
+                        {activeShowcase === 'button' && 'Now assistive technology announces "Add item to cart, button" clearly.'}
+                        {activeShowcase === 'image' && 'Screen readers announce the visual meaning: "Quarterly revenue grew by 14%".'}
+                        {activeShowcase === 'form' && 'The field label remains visible at all times and can be clicked to focus the input.'}
+                        {activeShowcase === 'contrast' && 'High-contrast text guarantees readability across all lighting conditions and vision capabilities.'}
+                        {activeShowcase === 'heading' && 'Hierarchical headings create an outline allowing keyboard and screen-reader skim navigation.'}
+                      </p>
                     </div>
 
-                    <h3 className="text-xl font-extrabold text-ink">
-                      {activeShowcase === 'button' && 'Add explicit aria-label or text'}
-                      {activeShowcase === 'image' && 'Provide descriptive alt text attribute'}
-                      {activeShowcase === 'form' && 'Pair with visible programmatic <label>'}
-                    </h3>
-
-                    <p className="text-sm text-ink-muted leading-relaxed font-medium">
-                      {activeShowcase === 'button' && 'Now assistive technology announces "Add item to cart, button" clearly.'}
-                      {activeShowcase === 'image' && 'Screen readers announce the visual meaning: "Quarterly revenue grew by 14%".'}
-                      {activeShowcase === 'form' && 'The field label remains visible at all times and can be clicked to focus the input.'}
-                    </p>
-
                     <div className="pt-2">
-                      <span className="text-xs font-bold text-teal block mb-1.5 font-sans">
-                        Accessible Markup:
-                      </span>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-xs font-bold text-teal block font-sans">
+                          Accessible Markup:
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            let codeToCopy = '';
+                            if (activeShowcase === 'button') codeToCopy = '<button aria-label="Add item to cart">\n  <svg aria-hidden="true" .../>\n</button>';
+                            if (activeShowcase === 'image') codeToCopy = '<img src="/assets/q3-growth.png"\n  alt="Q3 revenue increased by 14%">';
+                            if (activeShowcase === 'form') codeToCopy = '<label for="user-email">Email Address</label>\n<input id="user-email" type="email">';
+                            if (activeShowcase === 'contrast') codeToCopy = '/* Contrast: 7.2:1 (Passes AAA) */\ncolor: #18233A; background: #FFFFFF;';
+                            if (activeShowcase === 'heading') codeToCopy = '<h1>Welcome to Storefront</h1>\n<h2 class="promo-banner">Clearance</h2>';
+                            copyShowcaseCode(codeToCopy);
+                          }}
+                          className="inline-flex items-center text-xs font-bold text-teal bg-surface px-2.5 py-1 rounded-md border border-teal/25 hover:bg-teal-soft transition-colors cursor-pointer"
+                        >
+                          {copiedShowcase ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 mr-1" />
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Code2 className="w-3.5 h-3.5 mr-1" />
+                              Copy Code
+                            </>
+                          )}
+                        </button>
+                      </div>
                       <pre className="font-mono text-xs text-ink bg-surface p-3.5 rounded-xl border border-teal/25 overflow-x-auto">
                         <code>
                           {activeShowcase === 'button' && '<button aria-label="Add item to cart">\n  <svg aria-hidden="true" .../>\n</button>'}
                           {activeShowcase === 'image' && '<img src="/assets/q3-growth.png"\n  alt="Q3 revenue increased by 14%">'}
                           {activeShowcase === 'form' && '<label for="user-email">Email Address</label>\n<input id="user-email" type="email">'}
+                          {activeShowcase === 'contrast' && '/* Contrast: 7.2:1 (Passes AAA) */\ncolor: #18233A; background: #FFFFFF;'}
+                          {activeShowcase === 'heading' && '<h1>Welcome to Storefront</h1>\n<h2 class="promo-banner">Clearance</h2>'}
                         </code>
                       </pre>
                     </div>
@@ -584,47 +747,56 @@ export default function HomePage() {
                   One scan, a clearer next step
                 </h2>
                 <p className="text-base sm:text-lg text-ink-muted leading-relaxed font-medium">
-                  A simple three-step progression from URL input to shipping fixes.
+                  A transparent three-step progression from URL input to shipping verified accessibility improvements.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Step 1 */}
-                <div className="space-y-3 border-l-4 border-electric pl-5">
-                  <span className="font-mono text-xs font-extrabold text-electric uppercase tracking-wider block">
-                    Step 01
-                  </span>
+                <div className="p-6 bg-canvas rounded-2xl border-2 border-border-ink space-y-3.5 shadow-subtle hover:border-electric transition-colors">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-extrabold text-electric uppercase tracking-wider bg-surface px-2.5 py-1 rounded-md border border-border-ink">
+                      Step 01
+                    </span>
+                    <ShieldCheck className="w-5 h-5 text-electric" />
+                  </div>
                   <h3 className="text-xl font-extrabold text-ink">
-                    Submit public URL
+                    Submit Public URL
                   </h3>
                   <p className="text-sm text-ink-muted leading-relaxed font-medium">
-                    Enter any website address. WebForAll securely resolves the DNS destination, guards against private IP networks, and fetches the static HTML payload into ephemeral memory.
+                    Enter any website address. WebForAll securely resolves the DNS destination, rejects private IPv4/IPv6 networks, defends against SSRF, and fetches the static HTML payload directly into ephemeral memory.
                   </p>
                 </div>
 
                 {/* Step 2 */}
-                <div className="space-y-3 border-l-4 border-golden pl-5">
-                  <span className="font-mono text-xs font-extrabold text-golden uppercase tracking-wider block">
-                    Step 02
-                  </span>
+                <div className="p-6 bg-canvas rounded-2xl border-2 border-border-ink space-y-3.5 shadow-subtle hover:border-golden transition-colors">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-extrabold text-golden uppercase tracking-wider bg-surface px-2.5 py-1 rounded-md border border-border-ink">
+                      Step 02
+                    </span>
+                    <Layers className="w-5 h-5 text-golden" />
+                  </div>
                   <h3 className="text-xl font-extrabold text-ink">
-                    Evaluate DOM rules
+                    Evaluate Virtual DOM
                   </h3>
                   <p className="text-sm text-ink-muted leading-relaxed font-medium">
-                    Headless JSDOM parses the virtual DOM in a sandboxed runtime without executing untrusted scripts. The industry-standard axe-core engine executes WCAG 2.1 A and AA checks.
+                    Headless JSDOM parses the DOM tree in a sandboxed Node.js runtime without executing untrusted third-party scripts. axe-core 4.14 tests WCAG 2.1 Level A and AA rules deterministically.
                   </p>
                 </div>
 
                 {/* Step 3 */}
-                <div className="space-y-3 border-l-4 border-teal pl-5">
-                  <span className="font-mono text-xs font-extrabold text-teal uppercase tracking-wider block">
-                    Step 03
-                  </span>
+                <div className="p-6 bg-canvas rounded-2xl border-2 border-border-ink space-y-3.5 shadow-subtle hover:border-teal transition-colors">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs font-extrabold text-teal uppercase tracking-wider bg-surface px-2.5 py-1 rounded-md border border-border-ink">
+                      Step 03
+                    </span>
+                    <CheckCircle2 className="w-5 h-5 text-teal" />
+                  </div>
                   <h3 className="text-xl font-extrabold text-ink">
-                    Inspect & remediate
+                    Inspect & Remediate
                   </h3>
                   <p className="text-sm text-ink-muted leading-relaxed font-medium">
-                    Explore categorized findings, copy exact CSS selectors with one click, inspect side-by-side code solutions, or export structured reports for your team sprint.
+                    Review violations categorized by human impact, copy exact CSS selectors with one click, inspect verified before/after code solutions, or export multi-page PDF and JSON audit documents.
                   </p>
                 </div>
               </div>
@@ -638,18 +810,18 @@ export default function HomePage() {
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
               <div className="max-w-2xl space-y-2">
                 <span className="text-xs font-extrabold uppercase tracking-wider text-ink-muted">
-                  Honest Boundaries
+                  Honest Engineering Boundaries
                 </span>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-ink tracking-tight">
                   What automated scans do—and what they don&apos;t
                 </h2>
                 <p className="text-sm sm:text-base text-ink-muted leading-relaxed font-medium">
-                  We believe in transparent engineering: automated scans are an essential first step, but can never replace human auditing.
+                  We believe in transparent engineering: automated scans are an indispensable first step in continuous delivery, but cannot replace manual assistive evaluation.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                <div className="p-6 bg-surface rounded-2xl border border-border-ink space-y-3 shadow-subtle">
+                <div className="p-6 bg-surface rounded-2xl border-2 border-border-ink space-y-3 shadow-subtle">
                   <div className="flex items-center gap-2 text-ink font-bold text-base">
                     <CheckCircle2 className="w-5 h-5 text-teal flex-shrink-0" />
                     <span>What automated testing catches reliably</span>
@@ -662,10 +834,10 @@ export default function HomePage() {
                   </ul>
                 </div>
 
-                <div className="p-6 bg-surface rounded-2xl border border-border-ink space-y-3 shadow-subtle">
+                <div className="p-6 bg-surface rounded-2xl border-2 border-border-ink space-y-3 shadow-subtle">
                   <div className="flex items-center gap-2 text-ink font-bold text-base">
                     <AlertTriangle className="w-5 h-5 text-golden flex-shrink-0" />
-                    <span>What still benefits from human review</span>
+                    <span>What requires manual human review</span>
                   </div>
                   <ul className="space-y-2 text-ink-muted list-disc pl-5 font-medium text-xs sm:text-sm">
                     <li>Whether image descriptions are genuinely meaningful in their context.</li>
@@ -681,18 +853,28 @@ export default function HomePage() {
           {/* ============================================================ */}
           {/* SECTION 5: FINAL CALL TO ACTION BAND */}
           {/* ============================================================ */}
-          <section className="bg-electric text-white py-16 sm:py-20">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+          <section className="bg-electric text-white py-16 sm:py-20 relative overflow-hidden">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6 relative z-10">
               <span className="text-xs font-extrabold uppercase tracking-widest text-golden block">
                 Start In Seconds
               </span>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
                 Ready to find out what needs attention on your website?
               </h2>
-              <p className="text-base sm:text-lg text-white/80 max-w-xl mx-auto font-medium">
+              <p className="text-base sm:text-lg text-white/85 max-w-xl mx-auto font-medium">
                 Enter your URL above or try our controlled storefront fixture with known accessibility barriers.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    urlInputRef.current?.focus();
+                  }}
+                  className="px-6 py-3.5 rounded-xl font-extrabold text-base text-ink bg-white hover:bg-cream transition-colors shadow-elevated cursor-pointer"
+                >
+                  Scan a website now &uarr;
+                </button>
                 <Link
                   href="/demo"
                   className="px-6 py-3.5 rounded-xl font-bold text-base text-white bg-white/15 hover:bg-white/25 border border-white/25 transition-colors"
