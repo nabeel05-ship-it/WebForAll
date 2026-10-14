@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { AccessibilityReport, ImpactLevel } from '@/lib/scanner/types';
 import { generatePdfReport, sanitizeHostnameForFilename, triggerBrowserDownload } from '@/lib/reports/pdf-generator';
 import { motion, AnimatePresence } from 'motion/react';
+import { handleTabListKeyDown } from '@/lib/a11y/tabs';
 import {
   AlertTriangle,
   AlertOctagon,
@@ -265,14 +266,14 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
       case 'serious':
         return (
           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-golden-soft text-ink border border-golden/40">
-            <AlertTriangle className="w-3.5 h-3.5 mr-1 text-golden" aria-hidden="true" />
+            <AlertTriangle className="w-3.5 h-3.5 mr-1 text-golden-ink" aria-hidden="true" />
             Serious Issue
           </span>
         );
       case 'moderate':
         return (
           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold bg-golden-soft/60 text-ink border border-golden/30">
-            <AlertCircle className="w-3.5 h-3.5 mr-1 text-golden" aria-hidden="true" />
+            <AlertCircle className="w-3.5 h-3.5 mr-1 text-golden-ink" aria-hidden="true" />
             Moderate Issue
           </span>
         );
@@ -468,10 +469,10 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
             }`}
             title="Filter by Moderate violations"
           >
-            <span className="block text-2xl sm:text-3xl font-extrabold text-[#D97706] tabular-nums">
+            <span className="block text-2xl sm:text-3xl font-extrabold text-[#9A4A05] tabular-nums">
               {report.summary.byImpact.moderate}
             </span>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[#D97706] mt-1 block">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[#9A4A05] mt-1 block">
               Moderate
             </span>
           </button>
@@ -600,7 +601,7 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
 
         {/* "WHAT NEXT?" PRIORITIZATION GUIDANCE */}
         <div className="p-4 rounded-xl bg-cream border border-golden/30 text-ink text-sm leading-relaxed flex items-start gap-3">
-          <Sparkles className="w-5 h-5 text-golden flex-shrink-0 mt-0.5" aria-hidden="true" />
+          <Sparkles className="w-5 h-5 text-golden-ink flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div className="space-y-1">
             <strong className="font-bold text-ink block">Prioritizing your remediation next steps</strong>
             <p className="text-ink-muted text-xs sm:text-sm">
@@ -613,13 +614,21 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
       {/* ============================================================ */}
       {/* TABS NAVIGATION */}
       {/* ============================================================ */}
-      <div className="flex border-b border-border-ink no-print gap-2" role="tablist" aria-label="Report findings tabs">
+      <div
+        className="flex overflow-x-auto border-b border-border-ink no-print gap-2"
+        role="tablist"
+        aria-label="Report findings tabs"
+        onKeyDown={(e) => handleTabListKeyDown(e, ['violations', 'incomplete', 'passes'] as const, activeTab, setActiveTab)}
+      >
         <button
           type="button"
           role="tab"
+          id="report-tab-violations"
           aria-selected={activeTab === 'violations'}
+          aria-controls="report-panel-violations"
+          tabIndex={activeTab === 'violations' ? 0 : -1}
           onClick={() => setActiveTab('violations')}
-          className={`px-5 py-3 text-base font-bold border-b-2 transition-all rounded-t-lg ${
+          className={`whitespace-nowrap px-5 py-3 text-base font-bold border-b-2 transition-all rounded-t-lg ${
             activeTab === 'violations'
               ? 'border-electric text-electric bg-surface shadow-subtle'
               : 'border-transparent text-ink-muted hover:text-ink hover:bg-canvas'
@@ -630,9 +639,12 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
         <button
           type="button"
           role="tab"
+          id="report-tab-incomplete"
           aria-selected={activeTab === 'incomplete'}
+          aria-controls="report-panel-incomplete"
+          tabIndex={activeTab === 'incomplete' ? 0 : -1}
           onClick={() => setActiveTab('incomplete')}
-          className={`px-5 py-3 text-base font-bold border-b-2 transition-all rounded-t-lg ${
+          className={`whitespace-nowrap px-5 py-3 text-base font-bold border-b-2 transition-all rounded-t-lg ${
             activeTab === 'incomplete'
               ? 'border-violet text-violet bg-surface shadow-subtle'
               : 'border-transparent text-ink-muted hover:text-ink hover:bg-canvas'
@@ -643,9 +655,12 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
         <button
           type="button"
           role="tab"
+          id="report-tab-passes"
           aria-selected={activeTab === 'passes'}
+          aria-controls="report-panel-passes"
+          tabIndex={activeTab === 'passes' ? 0 : -1}
           onClick={() => setActiveTab('passes')}
-          className={`px-5 py-3 text-base font-bold border-b-2 transition-all rounded-t-lg ${
+          className={`whitespace-nowrap px-5 py-3 text-base font-bold border-b-2 transition-all rounded-t-lg ${
             activeTab === 'passes'
               ? 'border-teal text-teal bg-surface shadow-subtle'
               : 'border-transparent text-ink-muted hover:text-ink hover:bg-canvas'
@@ -659,7 +674,7 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
       {/* TAB 1: VIOLATIONS LIST */}
       {/* ============================================================ */}
       {activeTab === 'violations' && (
-        <section aria-label="Detected Violations" className="space-y-4">
+        <section role="tabpanel" id="report-panel-violations" aria-labelledby="report-tab-violations" className="space-y-4">
           {/* Filter Bar */}
           <div className="bg-surface p-4 rounded-xl border border-border-ink shadow-subtle space-y-3 no-print">
             <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -1049,7 +1064,7 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
                                       <span className="text-xs font-extrabold text-coral block uppercase tracking-wider">
                                         Problematic Pattern (Do Not Use)
                                       </span>
-                                      <pre className="text-xs text-ink font-mono bg-surface p-3 rounded-lg border border-coral/25 overflow-x-auto">
+                                      <pre className="text-xs text-ink font-mono bg-surface p-3 rounded-lg border border-coral/25 whitespace-pre-wrap break-words">
                                         <code>{v.remediation.codeExample.incorrect}</code>
                                       </pre>
                                     </div>
@@ -1079,7 +1094,7 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
                                             )}
                                           </button>
                                         </div>
-                                        <pre className="text-xs text-ink font-mono bg-surface p-3 rounded-lg border border-teal/25 overflow-x-auto">
+                                        <pre className="text-xs text-ink font-mono bg-surface p-3 rounded-lg border border-teal/25 whitespace-pre-wrap break-words">
                                           <code>{v.remediation.codeExample.correct}</code>
                                         </pre>
                                       </div>
@@ -1111,7 +1126,7 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
       {/* TAB 2: INCOMPLETE CHECKS (HUMAN REVIEW) */}
       {/* ============================================================ */}
       {activeTab === 'incomplete' && (
-        <section aria-label="Checks requiring manual review" className="space-y-4">
+        <section role="tabpanel" id="report-panel-incomplete" aria-labelledby="report-tab-incomplete" className="space-y-4">
           <div className="p-5 bg-violet-soft rounded-xl border border-violet/30 text-ink text-sm sm:text-base leading-relaxed flex items-start gap-3 shadow-subtle">
             <HelpCircle className="w-5 h-5 text-violet flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="space-y-1">
@@ -1175,7 +1190,7 @@ export default function ReportView({ report, onReset }: ReportViewProps) {
       {/* TAB 3: PASSED CHECKS */}
       {/* ============================================================ */}
       {activeTab === 'passes' && (
-        <section aria-label="Passed rules" className="space-y-4">
+        <section role="tabpanel" id="report-panel-passes" aria-labelledby="report-tab-passes" className="space-y-4">
           <div className="p-5 bg-teal-soft rounded-xl border border-teal/30 text-ink text-sm sm:text-base leading-relaxed flex items-start gap-3 shadow-subtle">
             <CheckCircle2 className="w-5 h-5 text-teal flex-shrink-0 mt-0.5" aria-hidden="true" />
             <div className="space-y-1">

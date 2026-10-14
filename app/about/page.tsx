@@ -10,16 +10,16 @@ export const metadata = {
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen py-10 sm:py-16 bg-canvas text-ink">
+    <div className="min-h-screen py-10 sm:py-16 bg-canvas text-ink bg-aurora bg-aurora-page overflow-x-clip">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         {/* Page Header */}
         <header className="space-y-4 pb-6 border-b border-border-ink">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-soft border border-violet/30 text-violet text-xs font-extrabold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/75 backdrop-blur border border-border-ink shadow-glass text-violet text-xs font-bold uppercase tracking-[0.12em]">
             <Heart className="w-3.5 h-3.5 text-coral" aria-hidden="true" />
             <span>Mission & Security</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-ink tracking-tight leading-tight">
+          <h1 className="text-4xl sm:text-6xl font-extrabold text-ink tracking-[-0.03em] leading-[1.05]">
             About WebForAll
           </h1>
           <p className="text-lg sm:text-xl text-ink-muted leading-relaxed font-medium">
@@ -50,7 +50,7 @@ export default function AboutPage() {
           </p>
 
           {/* Visual Technical Pipeline Flow Card */}
-          <div className="p-5 bg-surface rounded-2xl border-2 border-border-ink space-y-3 shadow-subtle">
+          <div className="p-5 bg-surface rounded-2xl border border-border-ink space-y-3 shadow-subtle">
             <span className="text-xs font-mono font-extrabold text-electric uppercase tracking-wider block">
               Ephemeral Scan Pipeline
             </span>
@@ -60,7 +60,7 @@ export default function AboutPage() {
                 <span className="text-[11px] text-ink-muted font-sans">Blocks private IPs & metadata</span>
               </div>
               <div className="p-3 bg-canvas rounded-xl border border-border-ink space-y-1">
-                <span className="text-golden font-bold block">2. Headless JSDOM</span>
+                <span className="text-golden-ink font-bold block">2. Headless JSDOM</span>
                 <span className="text-[11px] text-ink-muted font-sans">Isolated DOM virtual tree</span>
               </div>
               <div className="p-3 bg-canvas rounded-xl border border-border-ink space-y-1">
@@ -74,7 +74,7 @@ export default function AboutPage() {
             </div>
           </div>
 
-          <details className="text-xs sm:text-sm text-ink-muted bg-surface border-2 border-border-ink rounded-2xl p-5 cursor-pointer shadow-subtle">
+          <details className="text-xs sm:text-sm text-ink-muted bg-surface border border-border-ink rounded-2xl p-5 cursor-pointer shadow-subtle">
             <summary className="font-extrabold text-ink text-sm sm:text-base select-none flex items-center justify-between">
               <span>Technical pipeline details</span>
               <span className="text-xs text-electric font-bold">Click to expand</span>
@@ -96,7 +96,7 @@ export default function AboutPage() {
         {/* 3. Privacy and Data Handling */}
         <section className="space-y-4 pt-6 border-t border-border-ink" aria-labelledby="heading-privacy">
           <div className="flex items-center gap-2">
-            <Lock className="w-5 h-5 text-golden" />
+            <Lock className="w-5 h-5 text-golden-ink" />
             <h2 id="heading-privacy" className="text-2xl sm:text-3xl font-extrabold text-ink">
               Privacy & Zero-Retention Policy
             </h2>
@@ -124,7 +124,7 @@ export default function AboutPage() {
             Allowing a server to fetch public web pages requires rigorous Server-Side Request Forgery (SSRF) defenses to protect private network environments.
           </p>
 
-          <details className="text-xs sm:text-sm text-ink-muted bg-surface border-2 border-border-ink rounded-2xl p-5 cursor-pointer shadow-subtle">
+          <details className="text-xs sm:text-sm text-ink-muted bg-surface border border-border-ink rounded-2xl p-5 cursor-pointer shadow-subtle">
             <summary className="font-extrabold text-ink text-sm sm:text-base select-none flex items-center justify-between">
               <span>SSRF safeguards specification</span>
               <span className="text-xs text-electric font-bold">Click to expand</span>

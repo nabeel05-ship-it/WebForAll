@@ -104,7 +104,7 @@ export default function GuideRemediations() {
             initial="rest"
             whileHover="hover"
             whileTap={cardTapVariants.tap}
-            className="p-6 sm:p-7 rounded-2xl bg-surface border-2 border-border-ink space-y-4 shadow-subtle hover:border-electric/40 transition-colors"
+            className="p-6 sm:p-7 rounded-2xl bg-surface border border-border-ink space-y-4 shadow-subtle hover:border-electric/40 transition-colors"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center space-x-2.5">
@@ -121,17 +121,18 @@ export default function GuideRemediations() {
                     ? 'bg-teal-soft text-teal border border-teal/40'
                     : 'bg-canvas hover:bg-cream text-ink-muted hover:text-ink border border-border-ink'
                 }`}
-                aria-label={`Copy accessible code fix for ${fix.title}`}
               >
                 {isCopied ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-teal" aria-hidden="true" />
                     <span>Copied!</span>
+                    <span className="sr-only"> accessible code fix for {fix.title}</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>Copy Fix</span>
+                    <span className="sr-only"> for {fix.title}</span>
                   </>
                 )}
               </button>

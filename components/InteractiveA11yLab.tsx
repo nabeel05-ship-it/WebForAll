@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
+import { handleTabListKeyDown } from '@/lib/a11y/tabs';
 import {
   Volume2,
   VolumeX,
@@ -47,21 +48,24 @@ export default function InteractiveA11yLab() {
   const passesAAA = ratio >= 7.0;
 
   return (
-    <div className="bg-surface rounded-2xl border-2 border-border-ink p-6 sm:p-8 space-y-6 shadow-card">
+    <div className="bg-surface rounded-2xl border border-border-ink p-6 sm:p-8 space-y-6 shadow-card">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-4 border-b border-border-subtle">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-golden" />
+          <Sparkles className="w-5 h-5 text-golden-ink" />
           <h3 className="text-xl font-extrabold text-ink">
             Interactive Accessibility Lab
           </h3>
         </div>
 
         {/* Tab switchers */}
-        <div className="flex items-center gap-2 bg-canvas p-1 rounded-xl border border-border-ink text-xs font-bold" role="tablist" aria-label="Interactive Lab Modules">
+        <div className="flex items-center gap-2 bg-canvas p-1 rounded-xl border border-border-ink text-xs font-bold" role="tablist" aria-label="Interactive Lab Modules" onKeyDown={(e) => handleTabListKeyDown(e, ['name', 'contrast'] as const, activeTab, setActiveTab)}>
           <button
             type="button"
             role="tab"
+            id="lab-tab-name"
             aria-selected={activeTab === 'name'}
+            aria-controls="lab-panel-name"
+            tabIndex={activeTab === 'name' ? 0 : -1}
             onClick={() => setActiveTab('name')}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeTab === 'name' ? 'bg-electric text-white shadow-subtle' : 'text-ink-muted hover:text-ink'
@@ -72,7 +76,10 @@ export default function InteractiveA11yLab() {
           <button
             type="button"
             role="tab"
+            id="lab-tab-contrast"
             aria-selected={activeTab === 'contrast'}
+            aria-controls="lab-panel-contrast"
+            tabIndex={activeTab === 'contrast' ? 0 : -1}
             onClick={() => setActiveTab('contrast')}
             className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
               activeTab === 'contrast' ? 'bg-electric text-white shadow-subtle' : 'text-ink-muted hover:text-ink'
@@ -85,7 +92,7 @@ export default function InteractiveA11yLab() {
 
       {/* LAB 1: ACCESSIBLE NAME & SPEECH SIMULATOR */}
       {activeTab === 'name' && (
-        <div className="space-y-6">
+        <div role="tabpanel" id="lab-panel-name" aria-labelledby="lab-tab-name" className="space-y-6">
           <p className="text-sm text-ink-muted leading-relaxed font-medium">
             Test how screen readers (VoiceOver, NVDA, JAWS) announce interactive buttons based on their HTML markup.
           </p>
@@ -203,7 +210,7 @@ export default function InteractiveA11yLab() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-ink-muted block mb-1">
                   Generated HTML:
                 </span>
-                <pre className="text-[11px] font-mono bg-surface p-2.5 rounded-lg border border-border-ink text-ink overflow-x-auto">
+                <pre className="text-[11px] font-mono bg-surface p-2.5 rounded-lg border border-border-ink text-ink whitespace-pre-wrap break-words">
                   <code>
                     {buttonType === 'icon-only' && '<button class="btn">\n  <svg ...></svg>\n</button>'}
                     {buttonType === 'aria-label' && `<button aria-label="${customLabel}">\n  <svg aria-hidden="true" ...></svg>\n</button>`}
@@ -259,7 +266,7 @@ export default function InteractiveA11yLab() {
 
       {/* LAB 2: COLOR CONTRAST RATIO LAB */}
       {activeTab === 'contrast' && (
-        <div className="space-y-6">
+        <div role="tabpanel" id="lab-panel-contrast" aria-labelledby="lab-tab-contrast" className="space-y-6">
           <p className="text-sm text-ink-muted leading-relaxed font-medium">
             Evaluate text-to-background contrast ratios against the WCAG AA minimum requirement of 4.5:1.
           </p>

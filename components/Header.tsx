@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X, Sparkles, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import BrandLogo from '@/components/BrandLogo';
 
@@ -35,37 +35,37 @@ export default function Header() {
   ];
 
   return (
-    <header className="bg-surface/90 backdrop-blur-md border-b border-border-ink sticky top-0 z-40 transition-colors">
+    <header className="bg-white/75 backdrop-blur-xl backdrop-saturate-150 border-b border-border-ink/80 sticky top-0 z-40 transition-colors supports-[not(backdrop-filter:blur(0))]:bg-surface">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-18 py-3.5 items-center">
+        <div className="flex justify-between h-[4.25rem] items-center gap-4">
           {/* Brand Identity: Icon + Readable Wordmark */}
           <Link
             href="/"
-            className="flex items-center focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-electric rounded-xl py-1 px-1.5 transition-transform hover:opacity-95"
+            className="flex items-center rounded-xl py-1 px-1.5 transition-opacity hover:opacity-90"
             aria-label="WebForAll Home"
           >
             <BrandLogo priority iconSize={36} />
           </Link>
 
           {/* Desktop Navigation — Spacious & Centered / Balanced */}
-          <nav className="hidden md:flex items-center space-x-1.5 text-[15px]" aria-label="Main Navigation">
+          <nav className="hidden md:flex items-center gap-1 text-[15px] p-1 rounded-full bg-canvas/80 border border-border-subtle" aria-label="Main Navigation">
             {navLinks.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`px-4 py-2 rounded-xl font-bold transition-all relative ${
+                  className={`px-4 py-1.5 rounded-full font-semibold transition-colors relative isolate ${
                     isActive
-                      ? 'text-electric'
-                      : 'text-ink-muted hover:text-ink hover:bg-canvas'
+                      ? 'text-ink'
+                      : 'text-ink-muted hover:text-ink'
                   }`}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   {isActive && (
                     <motion.span
                       layoutId="active-nav-indicator"
-                      className="absolute inset-0 bg-electric-soft rounded-xl -z-10 shadow-subtle border border-electric/15"
+                      className="absolute inset-0 bg-surface rounded-full -z-10 shadow-card ring-1 ring-border-ink"
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -78,12 +78,19 @@ export default function Header() {
             })}
           </nav>
 
-          {/* Engine Status Tag (Desktop) */}
-          <div className="hidden lg:flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-soft/80 border border-teal/25 text-teal text-xs font-mono font-bold">
-              <span className="w-2 h-2 rounded-full bg-teal animate-pulse" aria-hidden="true" />
+          {/* Engine Status Tag + Primary Action (Desktop) */}
+          <div className="hidden md:flex items-center gap-3">
+            <span className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-soft border border-teal/20 text-teal text-xs font-mono font-bold">
+              <span className="w-1.5 h-1.5 rounded-full bg-teal animate-pulse" aria-hidden="true" />
               axe-core 4.14
             </span>
+            <Link
+              href="/#scanner"
+              className="group inline-flex items-center gap-1.5 pl-4 pr-3.5 py-2 rounded-full bg-ink text-white text-sm font-bold shadow-card hover:bg-[#1E2A44] transition-colors"
+            >
+              Scan a site
+              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -91,7 +98,7 @@ export default function Header() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2.5 rounded-xl text-ink bg-canvas border border-border-ink hover:bg-surface focus:outline-none focus:ring-3 focus:ring-electric cursor-pointer transition-colors"
+              className="p-2.5 rounded-xl text-ink bg-canvas border border-border-ink hover:bg-surface cursor-pointer transition-colors"
               aria-expanded={mobileMenuOpen}
               aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
             >
@@ -133,9 +140,17 @@ export default function Header() {
                 </Link>
               );
             })}
-            <div className="pt-2 px-2 border-t border-border-subtle flex items-center justify-between text-xs text-ink-muted">
+            <Link
+              href="/#scanner"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl bg-ink text-white text-[16px] font-bold"
+            >
+              Scan a site
+              <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </Link>
+            <div className="pt-3 px-2 border-t border-border-subtle flex items-center justify-between text-xs text-ink-muted">
               <span className="font-mono">axe-core 4.14 in ephemeral memory</span>
-              <span className="text-teal font-bold">100% Client/Serverless</span>
+              <span className="text-teal font-bold">Zero DB retention</span>
             </div>
           </motion.div>
         )}

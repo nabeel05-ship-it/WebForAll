@@ -12,16 +12,16 @@ export const metadata = {
 
 export default function GuidePage() {
   return (
-    <div className="min-h-screen py-10 sm:py-16 bg-canvas text-ink">
+    <div className="min-h-screen py-10 sm:py-16 bg-canvas text-ink bg-aurora bg-aurora-page overflow-x-clip">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
         {/* Page Header */}
         <header className="space-y-4 pb-8 border-b border-border-ink">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-soft border border-violet/30 text-violet text-xs font-extrabold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/75 backdrop-blur border border-border-ink shadow-glass text-violet text-xs font-bold uppercase tracking-[0.12em]">
             <BookOpen className="w-3.5 h-3.5" aria-hidden="true" />
             <span>Developer Handbook & Field Guide</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-ink tracking-tight leading-tight">
+          <h1 className="text-4xl sm:text-6xl font-extrabold text-ink tracking-[-0.03em] leading-[1.05]">
             Web Accessibility Field Guide
           </h1>
           <p className="text-lg sm:text-xl text-ink-muted leading-relaxed font-medium max-w-2xl">
@@ -35,7 +35,7 @@ export default function GuidePage() {
             <span>&bull;</span>
             <a href="#pour" className="text-electric hover:underline">POUR Principles</a>
             <span>&bull;</span>
-            <a href="#interactive-lab" className="text-electric hover:underline font-extrabold text-violet">Interactive Lab</a>
+            <a href="#interactive-lab" className="text-violet hover:underline font-extrabold">Interactive Lab</a>
             <span>&bull;</span>
             <a href="#fixes" className="text-electric hover:underline">Top 5 Barriers & Fixes</a>
             <span>&bull;</span>
@@ -93,7 +93,7 @@ export default function GuidePage() {
                 <span className="font-mono text-xs font-extrabold text-ink uppercase tracking-wider bg-surface px-2.5 py-1 rounded-md border border-golden/30">
                   Principle 02
                 </span>
-                <MousePointer className="w-5 h-5 text-golden" />
+                <MousePointer className="w-5 h-5 text-golden-ink" />
               </div>
               <h3 className="text-xl font-extrabold text-ink">2. Operable</h3>
               <p className="text-base text-ink leading-relaxed font-medium">
@@ -177,7 +177,7 @@ export default function GuidePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm leading-relaxed">
-            <div className="p-6 rounded-2xl bg-surface border-2 border-border-ink space-y-3 shadow-subtle">
+            <div className="p-6 rounded-2xl bg-surface border border-border-ink space-y-3 shadow-subtle">
               <strong className="text-ink block font-extrabold text-base flex items-center gap-2">
                 <CheckCircle2 className="w-5 h-5 text-teal" />
                 Automated Scans (axe-core)
@@ -190,9 +190,9 @@ export default function GuidePage() {
               </ul>
             </div>
 
-            <div className="p-6 rounded-2xl bg-surface border-2 border-border-ink space-y-3 shadow-subtle">
+            <div className="p-6 rounded-2xl bg-surface border border-border-ink space-y-3 shadow-subtle">
               <strong className="text-ink block font-extrabold text-base flex items-center gap-2">
-                <AlertOctagon className="w-5 h-5 text-golden" />
+                <AlertOctagon className="w-5 h-5 text-golden-ink" />
                 Manual Human Evaluation
               </strong>
               <ul className="space-y-2 text-ink-muted list-disc pl-5 font-medium text-xs sm:text-sm">
@@ -216,7 +216,7 @@ export default function GuidePage() {
               href="https://www.w3.org/WAI/fundamentals/accessibility-intro/"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-5 rounded-2xl bg-surface hover:bg-cream border-2 border-border-ink hover:border-electric transition-all flex-1 shadow-subtle"
+              className="p-5 rounded-2xl bg-surface hover:bg-cream border border-border-ink hover:border-electric transition-all flex-1 shadow-subtle"
             >
               <span className="font-extrabold text-ink block flex items-center justify-between text-base">
                 W3C Introduction to Accessibility
@@ -231,7 +231,7 @@ export default function GuidePage() {
               href="https://www.w3.org/TR/WCAG21/"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-5 rounded-2xl bg-surface hover:bg-cream border-2 border-border-ink hover:border-electric transition-all flex-1 shadow-subtle"
+              className="p-5 rounded-2xl bg-surface hover:bg-cream border border-border-ink hover:border-electric transition-all flex-1 shadow-subtle"
             >
               <span className="font-extrabold text-ink block flex items-center justify-between text-base">
                 WCAG 2.1 Technical Specifications
